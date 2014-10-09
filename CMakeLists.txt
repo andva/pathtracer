@@ -5,12 +5,6 @@ set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
-set(LIBRARY_OUTPUT_PATH
-    ${PROJECT_BINARY_DIR}/lib
-    CACHE PATH
-    "Directory where all libraries will be stored"
-)
-
 list(APPEND paradoxPath_INCLUDE_DIRS
 	${CMAKE_SOURCE_DIR}/external/gtest-1.7.0
 )
@@ -25,9 +19,9 @@ ELSE()
 	add_definitions(
 		-DGTEST_HAS_TR1_TUPLE=0
 		-DGTEST_USE_OWN_TR1_TUPLE=1
-		/MT
-		/Wall /WX- /DNOMINMAX /D_CRT_SECURE_NO_WARNINGS
 		)
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 ENDIF(UNIX)
 
 SET (CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS_INIT} $ENV{LDFLAGS} CACHE STRING "-lgcov")
@@ -46,9 +40,7 @@ add_executable(runUnitTests
     ${paradoxPath_TESTS}
 )
 
-#set_target_properties(runUnitTests PROPERTIES COMPILE_FLAGS "--coverage")
 target_link_libraries(runUnitTests gtest gtest_main pathfinder)
-#target_link_libraries(runUnitTests ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} pathfinder)
 
 add_test(
   NAME test

@@ -11,6 +11,7 @@ public:
 		MapTypeSimple = 1 << 1,
 		MapTypeSmallImpossible = 1 << 2,
 		MapTypeLargeImpossible = 1 << 3,
+		MapTypeSmallDiagonal = 1 << 4,
 	};
 
 	void createMap(unsigned int mapType)
@@ -42,24 +43,37 @@ public:
 			nMapHeight = 5;
 			unsigned int mapSize = nMapWidth * nMapHeight;
 			pMap = new unsigned int[mapSize];
-			for (int y = 0; y < nMapWidth; ++y)
-			for (int x = 0; x < nMapHeight; ++x)
+			for (int y = 0; y < nMapHeight; ++y)
+			for (int x = 0; x < nMapWidth; ++x)
 			{
 				pMap[x + y * nMapWidth] = (x == 2) ? 1 : 0;
 			}
 		}
 		else if (mapType == MapTypeLargeImpossible)
 		{
-			nMapWidth = 60;
-			nMapHeight = 60;
+			nMapWidth = 50;
+			nMapHeight = 30;
 			unsigned int mapSize = nMapWidth * nMapHeight;
 			pMap = new unsigned int[mapSize];
-			for (int y = 0; y < nMapWidth; ++y)
-			for (int x = 0; x < nMapHeight; ++x)
+			for (int y = 0; y < nMapHeight; ++y)
+			for (int x = 0; x < nMapWidth; ++x)
 			{
 				pMap[x + y * nMapWidth] = (x == nMapWidth - 3) ? 1 : 0;
 			}
 		}
+		else if (mapType == MapTypeSmallDiagonal)
+		{
+			nMapWidth = 10;
+			nMapHeight = 10;
+			unsigned int mapSize = nMapWidth * nMapHeight;
+			pMap = new unsigned int[mapSize];
+			for (int y = 0; y < nMapHeight; ++y)
+			for (int x = 0; x < nMapWidth; ++x)
+			{
+				pMap[x + y * nMapWidth] = (x == y) ? 1 : 0;
+			}
+		}
+		
 		pSearchSpace = new pathfinder::searchSpace(nMapWidth, nMapHeight, &pMap);
 	}
 
@@ -153,6 +167,19 @@ TEST_F(PathfinderTester, NoSolutionSmall)
 	createMap(MapTypeSmallImpossible);
 	bool solutionState = false;
 	EXPECT_TRUE(pSearchSpace->insertInitialNodes(pathfinder::vec2(0, 2), pathfinder::vec2(4, 2)));
+	while (pSearchSpace->m_vNodeVector.size() > 0) {
+		if (pSearchSpace->update(solutionState))
+			EXPECT_FALSE(solutionState);
+		pSearchSpace->addNeighbouringNodes();
+	}
+	EXPECT_EQ(0, pSearchSpace->numDuplicates());
+}
+
+TEST_F(PathfinderTester, NoSolutionDiagonal)
+{
+	createMap(MapTypeSmallDiagonal);
+	bool solutionState = false;
+	EXPECT_TRUE(pSearchSpace->insertInitialNodes(pathfinder::vec2(0, nMapHeight / 2), pathfinder::vec2(nMapWidth - 1, nMapHeight / 2)));
 	while (pSearchSpace->m_vNodeVector.size() > 0) {
 		if (pSearchSpace->update(solutionState))
 			EXPECT_FALSE(solutionState);

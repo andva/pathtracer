@@ -129,16 +129,7 @@ bool searchSpace::insertIfValid(const node::nodePtr* pParent, const vec2& nPos, 
 	{
 		return false;
 	}
-	node::nodePtr vnEnd = m_visitedNodes.cend();
-	for (node::nodePtr it = m_visitedNodes.cbegin(); it != vnEnd; ++it)
-	{
-		vec2 p = it->pos;
-		if (p.x == nPos.x && p.y == nPos.y)
-		{
-			return false;
-		}
-	}
-	
+
 	unsigned int h = distManhattan(nPos, m_goal);
 	unsigned int g = 1;
 
@@ -146,9 +137,22 @@ bool searchSpace::insertIfValid(const node::nodePtr* pParent, const vec2& nPos, 
 	{
 		g = (**pParent).g + 1;
 	}	
+	if (m_visitedNodes.size() > 0) 
+	{
+		node::nodePtr vnEnd = m_visitedNodes.cbegin();
+		for (node::nodePtr it = m_visitedNodes.cend(); true;)
+		{
+			--it;
+			vec2 p = it->pos;
+			if (p.x == nPos.x && p.y == nPos.y)
+			{
+				return false;
+			}
+			if (it == m_visitedNodes.cbegin() || it->g + it->h < h + g) break;
+		}
+	}
 
 	node n = node(&nPos, h, g, pParent);
-	int offset = rNodeList.size() == 0 ? 0 : 1;
 
 	for (node::nodePtr it = rNodeList.cbegin(); it != rNodeList.cend(); ++it)
 	{

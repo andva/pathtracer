@@ -28,7 +28,7 @@ public:
 	}
 	bool addNeighbouringNodes();
 	bool insertInitialNodes(const vec2& nStartPos, const vec2& nGoalPos);
-
+	int numDuplicates();
 	bool update(bool& solutionState);
 	std::vector<node> m_vNodeVector;
 	std::vector<node> m_visitedNodes;

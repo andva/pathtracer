@@ -94,6 +94,7 @@ TEST_F(PathfinderTester, InsertInitialNodes)
 	bool solutionState = false;
 	EXPECT_TRUE(pSearchSpace->insertInitialNodes(start, goal));
 	EXPECT_FALSE(pSearchSpace->update(solutionState));
+	EXPECT_EQ(0, pSearchSpace->numDuplicates());
 }
 
 TEST_F(PathfinderTester, StartAndGoalTests)
@@ -123,6 +124,7 @@ TEST_F(PathfinderTester, StartAndGoalTests)
 	EXPECT_TRUE(pSearchSpace->insertInitialNodes(p1, p1));
 	EXPECT_TRUE(pSearchSpace->update(solutionState));
 	EXPECT_TRUE(solutionState);
+	EXPECT_EQ(0, pSearchSpace->numDuplicates());
 }
 
 TEST_F(PathfinderTester, AddNeighbouringNodes)
@@ -143,6 +145,7 @@ TEST_F(PathfinderTester, AddNeighbouringNodes)
 	pSearchSpace->addNeighbouringNodes();
 	EXPECT_TRUE(pSearchSpace->update(solutionState));
 	EXPECT_TRUE(solutionState);
+	EXPECT_EQ(0, pSearchSpace->numDuplicates());
 }
 
 TEST_F(PathfinderTester, NoSolutionSmall)
@@ -153,10 +156,9 @@ TEST_F(PathfinderTester, NoSolutionSmall)
 	while (pSearchSpace->m_vNodeVector.size() > 0) {
 		if (pSearchSpace->update(solutionState))
 			EXPECT_FALSE(solutionState);
-			
-			
 		pSearchSpace->addNeighbouringNodes();
 	}
+	EXPECT_EQ(0, pSearchSpace->numDuplicates());
 }
 
 TEST_F(PathfinderTester, NoSolutionLarge)
@@ -169,4 +171,5 @@ TEST_F(PathfinderTester, NoSolutionLarge)
 			EXPECT_FALSE(solutionState);
 		pSearchSpace->addNeighbouringNodes();
 	}
+	EXPECT_EQ(0, pSearchSpace->numDuplicates());
 }

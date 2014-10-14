@@ -1,5 +1,8 @@
 #include "searchspace.h"
 #include <iostream>
+#include <algorithm>
+#include <set>
+#include <list>
 
 using namespace pathfinder;
 
@@ -70,58 +73,6 @@ bool searchSpace::addNeighbouringNodes()
 	insertIfValid(&m_activeNode, vec2(m_activeNode->pos.x, m_activeNode->pos.y + 1), insertNodes);
 	insertIfValid(&m_activeNode, vec2(m_activeNode->pos.x, m_activeNode->pos.y - 1), insertNodes);
 	return insertOrdered(insertNodes, m_vNodeVector);
-	/*if (m_vNodeVector.size() == 0)
-	{
-		if (insertNodes.size() != 0)
-		{
-			node::nodePtr it = insertNodes.end();
-			do
-			{
-				--it;
-				m_vNodeVector.push_back(*it);
-			} while (it != insertNodes.begin());
-			return true;
-		}
-		return false;
-	}
-
-	std::vector<node>::iterator currInNode = insertNodes.begin();
-	node::nodePtr inNodeEnd = insertNodes.end();
-	node::nodePtr it = m_vNodeVector.end() - 1;
-	// Add all nodes with lower cost compared to the current lowest
-	while (currInNode != inNodeEnd)
-	{
-		if (currInNode->h + currInNode->g > it->h + it->g) break;
-		m_vNodeVector.push_back(*currInNode);
-		it = m_vNodeVector.end() - 1;
-		++currInNode;
-	}
-	// If all nodes had lower cost
-	if (currInNode == inNodeEnd) return true;
-	
-	// Find correct positions for all other nodes that are supposed to be added
-	int n = 1;
-	it = m_vNodeVector.end() - n;
-	do
-	{
-		while (it->h + it->g >= currInNode->h + currInNode->g && currInNode != inNodeEnd)
-		{
-			m_vNodeVector.insert(it, *currInNode);
-			++currInNode;
-			it = m_vNodeVector.end() - n - 1;
-			if (currInNode == inNodeEnd)
-				return true;
-		}
-		if (it != m_vNodeVector.cbegin())
-		{
-			--it;
-			++n;
-		}
-		else
-			break;
-	} while (true);
-
-	return true;*/
 }
 
 bool searchSpace::update(bool& solutionState)
@@ -171,7 +122,6 @@ bool searchSpace::insertIfValid(const node::nodePtr* pParent, const vec2& nPos, 
 			return false;
 		}
 	}
-
 	
 	unsigned int h = distManhattan(nPos, m_goal);
 	unsigned int g = 1;
@@ -179,19 +129,7 @@ bool searchSpace::insertIfValid(const node::nodePtr* pParent, const vec2& nPos, 
 	if (pParent != nullptr)
 	{
 		g = (**pParent).g + 1;
-	}
-	/*if (m_vNodeVector.size() > 0)
-	{
-		for (node::nodePtr it = m_vNodeVector.cbegin(); it != m_vNodeVector.cend(); ++it)
-		{
-			if (it->pos.x == nPos.x && it->pos.y == nPos.y)
-			{
-				//std::cout << "HHEJEE REMOVE " << __FUNCTION__ << std::endl;
-				return false;
-			}
-		}
-	}*/
-	
+	}	
 
 	node n = node(&nPos, h, g, pParent);
 	int offset = rNodeList.size() == 0 ? 0 : 1;
@@ -221,4 +159,32 @@ bool searchSpace::insertInitialNodes(const vec2& nStartPos, const vec2& nGoalPos
 	m_goal = nGoalPos;
 
 	return true;
+}
+
+struct less_than_key
+{
+	inline bool operator() (const pathfinder::node& a, const pathfinder::node& b)
+	{
+		if (a.pos.x < b.pos.x) return true;
+		else if (a.pos.x == b.pos.x && a.pos.y < b.pos.y) return true;
+		else return false;
+	}
+};
+
+int searchSpace::numDuplicates()
+{
+	std::vector<pathfinder::node> tmp(m_visitedNodes.size());
+	std::copy(m_visitedNodes.begin(), m_visitedNodes.end(), tmp.begin());
+	tmp.insert(tmp.end(), m_vNodeVector.begin(), m_vNodeVector.end());
+	std::sort(tmp.begin(), tmp.end(), less_than_key());
+	node::nodePtr it = tmp.cbegin();
+	node::nodePtr nextIt = tmp.cbegin() + 1;
+	int duplicates = 0;
+	for (; it != tmp.cend() - 1; ++it, ++nextIt)
+	{
+		if (it->pos.x == nextIt->pos.x && it->pos.y == nextIt->pos.y) {
+			++duplicates;
+		}
+	}
+	return duplicates;
 }

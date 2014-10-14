@@ -25,6 +25,12 @@ struct node
 	node(const vec2* pPos, unsigned int nH, unsigned int nG, const nodePtr* pParent) :
 		pos(pPos->x, pPos->y), h(nH), g(nG), parent(pParent)
 	{}
+	node()
+	{
+		h = 0;
+		g = 0;
+		pos = vec2(0, 0);
+	}
 };
 } // namespace pathfinder
 

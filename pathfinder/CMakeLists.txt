@@ -1,9 +1,12 @@
 set(PATHFINDER_SRC
 	pathfinder.cpp
+	searchspace.cpp
 	)
 
 set(PATHFINDER_HEAD 
 	pathfinder.h
+	node.h
+	searchspace.h
 	)
 
 set(PLATFORM_COMPILE_FLAGS

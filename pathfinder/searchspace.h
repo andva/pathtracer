@@ -22,10 +22,14 @@ class searchSpace
 public:
 	searchSpace(const int nMapWidth, const int nMapHeight, unsigned int* const * pMap) :
 		m_nMapWidth(nMapWidth), m_nMapHeight(nMapHeight), m_pMap(pMap)
-	{}
+	{
+		m_vNodeVector.reserve(nMapWidth * nMapHeight / 9);
+		m_visitedNodes.reserve(nMapWidth * nMapHeight / 9);
+	}
 	bool addNeighbouringNodes();
 	bool insertInitialNodes(const vec2& nStartPos, const vec2& nGoalPos);
-	bool update();
+
+	bool update(bool& solutionState);
 	std::vector<node> m_vNodeVector;
 	std::vector<node> m_visitedNodes;
 

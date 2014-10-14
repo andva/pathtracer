@@ -12,7 +12,7 @@ ELSE()
 ENDIF(UNIX)
 
 ADD_SUBDIRECTORY(pathfinder)
-
+ADD_SUBDIRECTORY(main)
 ADD_SUBDIRECTORY("external/gtest-1.7.0")
 enable_testing()
 

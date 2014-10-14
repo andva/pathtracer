@@ -10,6 +10,7 @@ public:
 		MapTypeNone = 1 << 0,
 		MapTypeSimple = 1 << 1,
 		MapTypeSmallImpossible = 1 << 2,
+		MapTypeLargeImpossible = 1 << 3,
 	};
 
 	void createMap(unsigned int mapType)
@@ -47,6 +48,18 @@ public:
 				pMap[x + y * nMapWidth] = (x == 2) ? 1 : 0;
 			}
 		}
+		else if (mapType == MapTypeLargeImpossible)
+		{
+			nMapWidth = 30;
+			nMapHeight = 30;
+			unsigned int mapSize = nMapWidth * nMapHeight;
+			pMap = new unsigned int[mapSize];
+			for (int y = 0; y < nMapWidth; ++y)
+			for (int x = 0; x < nMapHeight; ++x)
+			{
+				pMap[x + y * nMapWidth] = (x == nMapWidth - 3) ? 1 : 0;
+			}
+		}
 		pSearchSpace = new pathfinder::searchSpace(nMapWidth, nMapHeight, &pMap);
 	}
 
@@ -78,16 +91,38 @@ TEST_F(PathfinderTester, InsertInitialNodes)
 	createMap(MapTypeSimple);
 	pathfinder::vec2 start(1, 1);
 	pathfinder::vec2 goal(2, 0);
+	bool solutionState = false;
 	EXPECT_TRUE(pSearchSpace->insertInitialNodes(start, goal));
-	EXPECT_FALSE(pSearchSpace->update());
+	EXPECT_FALSE(pSearchSpace->update(solutionState));
 }
 
-TEST_F(PathfinderTester, StartEqGoal)
+TEST_F(PathfinderTester, StartAndGoalTests)
 {
 	createMap(MapTypeSimple);
-	pathfinder::vec2 start(1, 1);
-	EXPECT_TRUE(pSearchSpace->insertInitialNodes(start, start));
-	EXPECT_TRUE(pSearchSpace->update());
+	pathfinder::vec2 p1(1, 1);
+	pathfinder::vec2 p2(-1, 1);
+	pathfinder::vec2 p3(nMapWidth, 1);
+	pathfinder::vec2 p4(1, nMapHeight);
+	bool solutionState = false;
+	EXPECT_FALSE(pSearchSpace->insertInitialNodes(p1, p2));
+	EXPECT_TRUE(pSearchSpace->update(solutionState));
+	EXPECT_FALSE(solutionState);
+
+	EXPECT_FALSE(pSearchSpace->insertInitialNodes(p3, p2));
+	EXPECT_TRUE(pSearchSpace->update(solutionState));
+	EXPECT_FALSE(solutionState);
+
+	EXPECT_FALSE(pSearchSpace->insertInitialNodes(p4, p2));
+	EXPECT_TRUE(pSearchSpace->update(solutionState));
+	EXPECT_FALSE(solutionState);
+
+	EXPECT_FALSE(pSearchSpace->insertInitialNodes(p2, p2));
+	EXPECT_TRUE(pSearchSpace->update(solutionState));
+	EXPECT_FALSE(solutionState);
+
+	EXPECT_TRUE(pSearchSpace->insertInitialNodes(p1, p1));
+	EXPECT_TRUE(pSearchSpace->update(solutionState));
+	EXPECT_TRUE(solutionState);
 }
 
 TEST_F(PathfinderTester, AddNeighbouringNodes)
@@ -95,26 +130,43 @@ TEST_F(PathfinderTester, AddNeighbouringNodes)
 	createMap(MapTypeSimple);
 	pathfinder::vec2 start(1, 1);
 	pathfinder::vec2 goal(2, 0);
+	bool solutionState = false;
 	EXPECT_TRUE(pSearchSpace->insertInitialNodes(start, goal));
-	EXPECT_FALSE(pSearchSpace->update());
+	EXPECT_FALSE(pSearchSpace->update(solutionState));
 	EXPECT_EQ(0, pSearchSpace->m_vNodeVector.size());
 	EXPECT_EQ(1, pSearchSpace->m_visitedNodes.size());
 	pSearchSpace->addNeighbouringNodes();
 	
 	EXPECT_EQ(4, pSearchSpace->m_vNodeVector.size());
-	EXPECT_FALSE(pSearchSpace->update());
+	EXPECT_FALSE(pSearchSpace->update(solutionState));
 
 	pSearchSpace->addNeighbouringNodes();
-	EXPECT_TRUE(pSearchSpace->update());
+	EXPECT_TRUE(pSearchSpace->update(solutionState));
+	EXPECT_TRUE(solutionState);
 }
 
-TEST_F(PathfinderTester, NoSolution)
+TEST_F(PathfinderTester, NoSolutionSmall)
 {
 	createMap(MapTypeSmallImpossible);
+	bool solutionState = false;
 	EXPECT_TRUE(pSearchSpace->insertInitialNodes(pathfinder::vec2(0, 2), pathfinder::vec2(4, 2)));
-	EXPECT_FALSE(pSearchSpace->update());
 	while (pSearchSpace->m_vNodeVector.size() > 0) {
-		EXPECT_FALSE(pSearchSpace->update());
+		if (pSearchSpace->update(solutionState))
+			EXPECT_FALSE(solutionState);
+			
+			
+		pSearchSpace->addNeighbouringNodes();
+	}
+}
+
+TEST_F(PathfinderTester, NoSolutionLarge)
+{
+	createMap(MapTypeLargeImpossible);
+	bool solutionState = false;
+	EXPECT_TRUE(pSearchSpace->insertInitialNodes(pathfinder::vec2(0, nMapHeight / 2), pathfinder::vec2(nMapWidth - 1, nMapHeight / 2)));
+	while (pSearchSpace->m_vNodeVector.size() > 0) {
+		if (pSearchSpace->update(solutionState))
+			EXPECT_FALSE(solutionState);
 		pSearchSpace->addNeighbouringNodes();
 	}
 }

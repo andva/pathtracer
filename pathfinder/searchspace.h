@@ -28,7 +28,7 @@ public:
 	}
 	bool addNeighbouringNodes();
 	bool insertInitialNodes(const vec2& nStartPos, const vec2& nGoalPos);
-	int numDuplicates();
+	int numDuplicates() const;
 	bool update(bool& solutionState);
 	std::vector<node> m_vNodeVector;
 	std::vector<node> m_visitedNodes;
@@ -41,6 +41,7 @@ private:
 	vec2 m_goal;
 	node::nodePtr m_activeNode;
 	inline int calculateIndex(const vec2& nPos) const;
+	bool insertOrdered(const std::vector<pathfinder::node>& insertNodes, std::vector<pathfinder::node>& nodeList) const;
 	bool validateVec(const vec2& nPos) const;
 	bool insertIfValid(const node::nodePtr* pParent, const vec2& nPos, std::vector<pathfinder::node>& rNodeList);
 };

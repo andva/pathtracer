@@ -50,8 +50,8 @@ public:
 		}
 		else if (mapType == MapTypeLargeImpossible)
 		{
-			nMapWidth = 30;
-			nMapHeight = 30;
+			nMapWidth = 60;
+			nMapHeight = 60;
 			unsigned int mapSize = nMapWidth * nMapHeight;
 			pMap = new unsigned int[mapSize];
 			for (int y = 0; y < nMapWidth; ++y)

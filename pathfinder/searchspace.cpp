@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <set>
 #include <list>
+#include <cassert>
 
 using namespace pathfinder;
 
@@ -13,7 +14,7 @@ unsigned int pathfinder::distManhattan(const vec2& sPosA, const vec2& sPosB)
 	return dx + dy;
 }
 
-bool insertOrdered(const std::vector<pathfinder::node>& insertNodes, std::vector<pathfinder::node>& nodeList)
+bool searchSpace::insertOrdered(const std::vector<pathfinder::node>& insertNodes, std::vector<pathfinder::node>& nodeList) const
 {
 	if (insertNodes.size() == 0) return false;
 	if (nodeList.size() == 0)
@@ -28,13 +29,25 @@ bool insertOrdered(const std::vector<pathfinder::node>& insertNodes, std::vector
 	}
 	std::vector<node>::const_iterator currInNode = insertNodes.cbegin();
 	node::nodePtr inNodeEnd = insertNodes.end();
-	node::nodePtr it = nodeList.end() - 1;
+	node::nodePtr it = nodeList.end();
 	// Add all nodes with lower cost compared to the current lowest
 	while (currInNode != inNodeEnd)
 	{
+		while (it != nodeList.cbegin())
+		{
+			
+			--it;
+			if (currInNode->pos.x == it->pos.x && currInNode->pos.y == it->pos.y)
+			{
+				++currInNode;
+				if (currInNode == inNodeEnd) return true;
+				else break;
+			}
+		}
+		it = nodeList.end() - 1;
 		if (currInNode->h + currInNode->g > it->h + it->g) break;
 		nodeList.push_back(*currInNode);
-		it = nodeList.end() - 1;
+		
 		++currInNode;
 	}
 	// If all nodes had lower cost
@@ -51,7 +64,9 @@ bool insertOrdered(const std::vector<pathfinder::node>& insertNodes, std::vector
 			++currInNode;
 			it = nodeList.end() - n - 1;
 			if (currInNode == inNodeEnd)
+			{
 				return true;
+			}
 		}
 		if (it != nodeList.cbegin())
 		{
@@ -117,7 +132,8 @@ bool searchSpace::insertIfValid(const node::nodePtr* pParent, const vec2& nPos, 
 	node::nodePtr vnEnd = m_visitedNodes.cend();
 	for (node::nodePtr it = m_visitedNodes.cbegin(); it != vnEnd; ++it)
 	{
-		if (it->pos.x == nPos.x && it->pos.y == nPos.y)
+		vec2 p = it->pos;
+		if (p.x == nPos.x && p.y == nPos.y)
 		{
 			return false;
 		}
@@ -171,7 +187,7 @@ struct less_than_key
 	}
 };
 
-int searchSpace::numDuplicates()
+int searchSpace::numDuplicates() const
 {
 	std::vector<pathfinder::node> tmp(m_visitedNodes.size());
 	std::copy(m_visitedNodes.begin(), m_visitedNodes.end(), tmp.begin());

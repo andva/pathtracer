@@ -12,184 +12,217 @@ public:
 		MapTypeSmallImpossible = 1 << 2,
 		MapTypeLargeImpossible = 1 << 3,
 		MapTypeSmallDiagonal = 1 << 4,
+		MapTypeSingleLane = 1 << 5,
 	};
 
-	void createMap(unsigned int mapType)
+	int findPath(const pathfinder::vec2& start, const pathfinder::vec2& goal)
 	{
+		return pathfinder::FindPath(start.x, start.y, goal.x, goal.y, m_map, m_mapWidth, m_mapHeight, m_outBuffer, m_outBufferSize);
+	}
+
+	void createMap(unsigned int mapType, const unsigned int maxSteps)
+	{
+		delete[] m_map;
+		delete[] m_outBuffer;
+		m_outBufferSize = maxSteps;
+		m_outBuffer = new int[m_outBufferSize];
 		if (mapType == MapTypeNone)
 		{
-			nMapWidth = 0;
-			nMapHeight = 0;
-			pMap = new unsigned char[0];
+			m_mapWidth = 0;
+			m_mapHeight = 0;
+			m_map = new unsigned char[0];
 		}
-		else
+		else if (mapType == MapTypeSimple)
 		{
-			delete[] pMap;
-		}
-		if (mapType == MapTypeSimple)
-		{
-			nMapWidth = 3;
-			nMapHeight = 3;
-			unsigned int mapSize = nMapWidth * nMapHeight;
-			pMap = new unsigned char[mapSize];
+			m_mapWidth = 5;
+			m_mapHeight = 5;
+			unsigned int mapSize = m_mapWidth * m_mapHeight;
+			m_map = new unsigned char[mapSize];
 			for (unsigned int i = 0; i < mapSize; ++i)
 			{
-				pMap[i] = 0;
+				m_map[i] = 0;
 			}
 		}
 		else if (mapType == MapTypeSmallImpossible)
 		{
-			nMapWidth = 5;
-			nMapHeight = 5;
-			unsigned int mapSize = nMapWidth * nMapHeight;
-			pMap = new unsigned char[mapSize];
-			for (int y = 0; y < nMapHeight; ++y)
-			for (int x = 0; x < nMapWidth; ++x)
+			m_mapWidth = 5;
+			m_mapHeight = 5;
+			unsigned int mapSize = m_mapWidth * m_mapHeight;
+			m_map = new unsigned char[mapSize];
+			for (int y = 0; y < m_mapHeight; ++y)
+			for (int x = 0; x < m_mapWidth; ++x)
 			{
-				pMap[x + y * nMapWidth] = (x == 2) ? 1 : 0;
+				m_map[x + y * m_mapWidth] = (x == 2) ? 1 : 0;
 			}
 		}
 		else if (mapType == MapTypeLargeImpossible)
 		{
-			nMapWidth = 500;
-			nMapHeight = 500;
-			unsigned int mapSize = nMapWidth * nMapHeight;
-			pMap = new unsigned char[mapSize];
-			for (int y = 0; y < nMapHeight; ++y)
-			for (int x = 0; x < nMapWidth; ++x)
+			m_mapWidth = 500;
+			m_mapHeight = 500;
+			unsigned int mapSize = m_mapWidth * m_mapHeight;
+			m_map = new unsigned char[mapSize];
+			for (int y = 0; y < m_mapHeight; ++y)
+			for (int x = 0; x < m_mapWidth; ++x)
 			{
-				pMap[x + y * nMapWidth] = (x == nMapWidth - 3) ? 1 : 0;
+				m_map[x + y * m_mapWidth] = (x == m_mapWidth - 3) ? 1 : 0;
 			}
 		}
 		else if (mapType == MapTypeSmallDiagonal)
 		{
-			nMapWidth = 10;
-			nMapHeight = 10;
-			unsigned int mapSize = nMapWidth * nMapHeight;
-			pMap = new unsigned char[mapSize];
-			for (int y = 0; y < nMapHeight; ++y)
-			for (int x = 0; x < nMapWidth; ++x)
+			m_mapWidth = 10;
+			m_mapHeight = 10;
+			unsigned int mapSize = m_mapWidth * m_mapHeight;
+			m_map = new unsigned char[mapSize];
+			for (int y = 0; y < m_mapHeight; ++y)
+			for (int x = 0; x < m_mapWidth; ++x)
 			{
-				pMap[x + y * nMapWidth] = (x == y) ? 1 : 0;
+				m_map[x + y * m_mapWidth] = (x == y) ? 1 : 0;
+			}
+		}
+		if (mapType == MapTypeSingleLane)
+		{
+			m_mapWidth = 10;
+			m_mapHeight = 1;
+			unsigned int mapSize = m_mapWidth * m_mapHeight;
+			m_map = new unsigned char[mapSize];
+			for (unsigned int i = 0; i < mapSize; ++i)
+			{
+				m_map[i] = 0;
 			}
 		}
 		
-		pSearchSpace = new pathfinder::searchSpace(nMapWidth, nMapHeight, &pMap);
+		m_searchSpace = new pathfinder::searchSpace(m_mapWidth, m_mapHeight, maxSteps, &m_map);
 	}
 
 protected:
 	virtual void SetUp() {
-		createMap(MapTypeNone);
+		m_outBuffer = new int[0];
+		m_mapWidth = 0;
+		m_mapHeight = 0;
+		m_map = new unsigned char[0];
+		createMap(MapTypeNone, 0);
 	}
 
 	virtual void TearDown() {
-		delete[] pMap;
-		delete pSearchSpace;
+		delete[] m_map;
+		delete m_searchSpace;
 	}
-	unsigned char* pMap;
-	pathfinder::vec2 sStart;
-	pathfinder::vec2 sGoal;
-	int nMapWidth;
-	int nMapHeight;
-	pathfinder::searchSpace* pSearchSpace;
+	unsigned char* m_map;
+	pathfinder::vec2 m_start;
+	pathfinder::vec2 m_goal;
+	int m_mapWidth;
+	int m_mapHeight;
+	pathfinder::searchSpace* m_searchSpace;
+	int* m_outBuffer;
+	int m_outBufferSize;
 };
 
 TEST_F(PathfinderTester, ManhattanDistance)
 {
-	EXPECT_EQ(0, pathfinder::distManhattan(sStart, sGoal));
+	EXPECT_EQ(0, pathfinder::distManhattan(m_start, m_goal));
 	EXPECT_EQ(2, pathfinder::distManhattan(pathfinder::vec2(), pathfinder::vec2(1,1)));
 }
 
 TEST_F(PathfinderTester, InsertInitialNodes)
 {
-	createMap(MapTypeSimple);
+
+	createMap(MapTypeSimple, 2);
 	pathfinder::vec2 start(1, 1);
 	pathfinder::vec2 goal(2, 0);
 	bool solutionState = false;
-	EXPECT_TRUE(pSearchSpace->insertInitialNodes(start, goal));
-	EXPECT_FALSE(pSearchSpace->update(solutionState));
+	EXPECT_TRUE(m_searchSpace->insertInitialNodes(start, goal));
+	EXPECT_FALSE(m_searchSpace->update(solutionState));
 }
 
 TEST_F(PathfinderTester, StartAndGoalTests)
 {
-	createMap(MapTypeSimple);
+	createMap(MapTypeSimple, 2);
 	pathfinder::vec2 p1(1, 1);
 	pathfinder::vec2 p2(-1, 1);
-	pathfinder::vec2 p3(nMapWidth, 1);
-	pathfinder::vec2 p4(1, nMapHeight);
+	pathfinder::vec2 p3(m_mapWidth, 1);
+	pathfinder::vec2 p4(1, m_mapHeight);
 	bool solutionState = false;
-	EXPECT_FALSE(pSearchSpace->insertInitialNodes(p1, p2));
-	EXPECT_TRUE(pSearchSpace->update(solutionState));
+	EXPECT_FALSE(m_searchSpace->insertInitialNodes(p1, p2));
+	EXPECT_TRUE(m_searchSpace->update(solutionState));
 	EXPECT_FALSE(solutionState);
 
-	EXPECT_FALSE(pSearchSpace->insertInitialNodes(p3, p2));
-	EXPECT_TRUE(pSearchSpace->update(solutionState));
+	EXPECT_FALSE(m_searchSpace->insertInitialNodes(p3, p2));
+	EXPECT_TRUE(m_searchSpace->update(solutionState));
 	EXPECT_FALSE(solutionState);
 
-	EXPECT_FALSE(pSearchSpace->insertInitialNodes(p4, p2));
-	EXPECT_TRUE(pSearchSpace->update(solutionState));
+	EXPECT_FALSE(m_searchSpace->insertInitialNodes(p4, p2));
+	EXPECT_TRUE(m_searchSpace->update(solutionState));
 	EXPECT_FALSE(solutionState);
 
-	EXPECT_FALSE(pSearchSpace->insertInitialNodes(p2, p2));
-	EXPECT_TRUE(pSearchSpace->update(solutionState));
+	EXPECT_FALSE(m_searchSpace->insertInitialNodes(p2, p2));
+	EXPECT_TRUE(m_searchSpace->update(solutionState));
 	EXPECT_FALSE(solutionState);
 
-	EXPECT_TRUE(pSearchSpace->insertInitialNodes(p1, p1));
-	EXPECT_TRUE(pSearchSpace->update(solutionState));
+	EXPECT_TRUE(m_searchSpace->insertInitialNodes(p1, p1));
+	EXPECT_TRUE(m_searchSpace->update(solutionState));
 	EXPECT_TRUE(solutionState);
 }
 
 TEST_F(PathfinderTester, AddNeighboringNodes)
 {
-	createMap(MapTypeSimple);
+	const int outBufferSize = 4;
+	createMap(MapTypeSimple, outBufferSize);
 	pathfinder::vec2 start(1, 1);
 	pathfinder::vec2 goal(2, 0);
 	bool solutionState = false;
-	EXPECT_TRUE(pSearchSpace->insertInitialNodes(start, goal));
-	EXPECT_FALSE(pSearchSpace->update(solutionState));
-	EXPECT_EQ(0, pSearchSpace->m_vNodeVector.size());
-	pSearchSpace->addNeighboringNodes();
+	EXPECT_TRUE(m_searchSpace->insertInitialNodes(start, goal));
+	EXPECT_FALSE(m_searchSpace->update(solutionState));
+	m_searchSpace->addNeighboringNodes();
 	
-	EXPECT_EQ(4, pSearchSpace->m_vNodeVector.size());
-	EXPECT_FALSE(pSearchSpace->update(solutionState));
+	EXPECT_FALSE(m_searchSpace->update(solutionState));
+	m_searchSpace->addNeighboringNodes();
 
-	pSearchSpace->addNeighboringNodes();
-	EXPECT_TRUE(pSearchSpace->update(solutionState));
+	EXPECT_TRUE(m_searchSpace->update(solutionState));
 	EXPECT_TRUE(solutionState);
+	int steps = m_searchSpace->getSolution(m_outBuffer);
+	EXPECT_TRUE(steps != -1);
 }
 
 TEST_F(PathfinderTester, NoSolutionSmall)
 {
-	createMap(MapTypeSmallImpossible);
-	bool solutionState = false;
-	EXPECT_TRUE(pSearchSpace->insertInitialNodes(pathfinder::vec2(0, 2), pathfinder::vec2(4, 2)));
-	while (pSearchSpace->m_vNodeVector.size() > 0) {
-		if (pSearchSpace->update(solutionState))
-			EXPECT_FALSE(solutionState);
-		pSearchSpace->addNeighboringNodes();
-	}
+	createMap(MapTypeSmallImpossible, 10);
+	int numSteps = findPath(pathfinder::vec2(0, 2), pathfinder::vec2(4, 2));
+	EXPECT_EQ(-1, numSteps);
 }
 
 TEST_F(PathfinderTester, NoSolutionDiagonal)
 {
-	createMap(MapTypeSmallDiagonal);
-	bool solutionState = false;
-	EXPECT_TRUE(pSearchSpace->insertInitialNodes(pathfinder::vec2(0, nMapHeight / 2), pathfinder::vec2(nMapWidth - 1, nMapHeight / 2)));
-	while (pSearchSpace->m_vNodeVector.size() > 0) {
-		if (pSearchSpace->update(solutionState))
-			EXPECT_FALSE(solutionState);
-		pSearchSpace->addNeighboringNodes();
-	}
+	createMap(MapTypeSmallDiagonal, 10);
+	pathfinder::vec2 start(0, m_mapHeight / 2);
+	pathfinder::vec2 goal(m_mapWidth - 1, m_mapHeight / 2);
+	int numSteps = findPath(start, goal);
+	EXPECT_EQ(-1, numSteps);
 }
 
 TEST_F(PathfinderTester, NoSolutionLarge)
 {
-	createMap(MapTypeLargeImpossible);
-	bool solutionState = false;
-	EXPECT_TRUE(pSearchSpace->insertInitialNodes(pathfinder::vec2(0, nMapHeight / 2), pathfinder::vec2(nMapWidth - 1, nMapHeight / 2)));
-	while (pSearchSpace->m_vNodeVector.size() > 0) {
-		if (pSearchSpace->update(solutionState))
-			EXPECT_FALSE(solutionState);
-		pSearchSpace->addNeighboringNodes();
+	createMap(MapTypeLargeImpossible, 1000);
+	pathfinder::vec2 start(0, m_mapHeight / 2);
+	pathfinder::vec2 goal(m_mapWidth - 1, m_mapHeight / 2);
+	int numSteps = findPath(start, goal);
+	EXPECT_EQ(-1, numSteps);
+}
+
+TEST_F(PathfinderTester, SingleLaneMap)
+{
+	createMap(MapTypeSingleLane, m_mapWidth);
+	int numSteps = findPath(pathfinder::vec2(0, 0), pathfinder::vec2(m_mapWidth - 1, 0));
+	EXPECT_FALSE(numSteps != -1);
+}
+
+TEST_F(PathfinderTester, LoopAllowedLength)
+{
+	pathfinder::vec2 start(0, m_mapHeight / 2);
+	pathfinder::vec2 goal(m_mapWidth - 1, m_mapHeight / 2);
+	for (int i = 0; i < m_mapWidth; ++i)
+	{
+		createMap(MapTypeSimple, i);
+		int numSteps = findPath(start, goal);
+		EXPECT_EQ(goal.x - start.x > i, numSteps == -1);
 	}
 }

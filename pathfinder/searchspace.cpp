@@ -96,10 +96,8 @@ bool searchSpace::update(bool& solutionState)
 	}
 	pathfinder::node n = m_vNodeVector.back();
 	m_vNodeVector.pop_back();
-	//m_visitedNodes.push_back(n);
 	int i = n.pos.x + n.pos.y * m_nMapWidth;
-	m_visitedNodeMap[i] = n;
-	m_activeNode = &m_visitedNodeMap[i];//m_visitedNodes.cend() - 1;
+	m_activeNode = &m_visitedNodeMap[i]; // All nodes are already added
 	bool foundPath = m_activeNode->pos.x == m_goal.x && m_activeNode->pos.y == m_goal.y;
 	solutionState = foundPath;
 	return foundPath;
@@ -119,7 +117,6 @@ int searchSpace::calculateIndex(const vec2& nPos) const
 	return m_nMapWidth * nPos.y + nPos.x;
 }
 
-
 bool searchSpace::insertIfValid(const node* pParent, const vec2& nPos, std::vector<pathfinder::node>& rNodeList)
 {
 	if (!validateVec(nPos))
@@ -133,6 +130,10 @@ bool searchSpace::insertIfValid(const node* pParent, const vec2& nPos, std::vect
 	if (pParent != nullptr)
 	{
 		g = (*pParent).g + 1;
+	}
+	if (h + g >= m_maxSteps)
+	{
+		return false;
 	}
 	if (m_visitedNodeMap.find(nPos.x + nPos.y * m_nMapWidth) != m_visitedNodeMap.end())
 	{
@@ -162,18 +163,28 @@ bool searchSpace::insertInitialNodes(const vec2& nStartPos, const vec2& nGoalPos
 
 	m_start = nStartPos;
 	pathfinder::node start(&nStartPos, 0, 0, nullptr);
-	m_vNodeVector.push_back(start);
+	insertNode(start, nullptr);
+	m_activeNode = &start;
 	m_goal = nGoalPos;
 
 	return true;
 }
 
-struct less_than_key
+void getParentValue(const node* n, const int nMapWidth, vec2 start, const int i, const int depth, int* pOutBuffer)
 {
-	inline bool operator() (const pathfinder::node& a, const pathfinder::node& b)
+	if (n->parent != nullptr) getParentValue(n->parent, nMapWidth, start, i + 1, depth, pOutBuffer);
+	pOutBuffer[depth - i] = n->pos.x + n->pos.y * nMapWidth;
+}
+
+int searchSpace::getSolution(int* pOutBuffer) const
+{
+	if (m_activeNode->pos.x == m_goal.x && m_activeNode->pos.y == m_goal.y)
 	{
-		if (a.pos.x < b.pos.x) return true;
-		else if (a.pos.x == b.pos.x && a.pos.y < b.pos.y) return true;
-		else return false;
+		const node* nodeItr = m_activeNode;
+		getParentValue(nodeItr, m_nMapWidth, m_start, 0, nodeItr->g, pOutBuffer);
+		return nodeItr->g + 1;
 	}
-};
+	else {
+		return -1;
+	}
+}

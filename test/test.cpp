@@ -51,8 +51,8 @@ public:
 		}
 		else if (mapType == MapTypeLargeImpossible)
 		{
-			nMapWidth = 50;
-			nMapHeight = 30;
+			nMapWidth = 500;
+			nMapHeight = 500;
 			unsigned int mapSize = nMapWidth * nMapHeight;
 			pMap = new unsigned int[mapSize];
 			for (int y = 0; y < nMapHeight; ++y)
@@ -150,7 +150,6 @@ TEST_F(PathfinderTester, AddNeighbouringNodes)
 	EXPECT_TRUE(pSearchSpace->insertInitialNodes(start, goal));
 	EXPECT_FALSE(pSearchSpace->update(solutionState));
 	EXPECT_EQ(0, pSearchSpace->m_vNodeVector.size());
-	EXPECT_EQ(1, pSearchSpace->m_visitedNodes.size());
 	pSearchSpace->addNeighbouringNodes();
 	
 	EXPECT_EQ(4, pSearchSpace->m_vNodeVector.size());

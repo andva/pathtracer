@@ -1,6 +1,7 @@
 #include "searchspace.h"
 #include <iostream>
 #include <algorithm>
+#include <functional>
 #include <set>
 #include <list>
 #include <cassert>
@@ -35,7 +36,6 @@ bool searchSpace::insertOrdered(const std::vector<pathfinder::node>& insertNodes
 	{
 		while (it != nodeList.cbegin())
 		{
-			
 			--it;
 			if (currInNode->pos.x == it->pos.x && currInNode->pos.y == it->pos.y)
 			{
@@ -83,10 +83,10 @@ bool searchSpace::addNeighbouringNodes()
 {
 	// Create nodes
 	std::vector<pathfinder::node> insertNodes;
-	insertIfValid(&m_activeNode, vec2(m_activeNode->pos.x + 1, m_activeNode->pos.y), insertNodes);
-	insertIfValid(&m_activeNode, vec2(m_activeNode->pos.x - 1, m_activeNode->pos.y), insertNodes);
-	insertIfValid(&m_activeNode, vec2(m_activeNode->pos.x, m_activeNode->pos.y + 1), insertNodes);
-	insertIfValid(&m_activeNode, vec2(m_activeNode->pos.x, m_activeNode->pos.y - 1), insertNodes);
+	insertIfValid(m_activeNode, vec2(m_activeNode->pos.x + 1, m_activeNode->pos.y), insertNodes);
+	insertIfValid(m_activeNode, vec2(m_activeNode->pos.x - 1, m_activeNode->pos.y), insertNodes);
+	insertIfValid(m_activeNode, vec2(m_activeNode->pos.x, m_activeNode->pos.y + 1), insertNodes);
+	insertIfValid(m_activeNode, vec2(m_activeNode->pos.x, m_activeNode->pos.y - 1), insertNodes);
 	return insertOrdered(insertNodes, m_vNodeVector);
 }
 
@@ -100,9 +100,10 @@ bool searchSpace::update(bool& solutionState)
 	}
 	pathfinder::node n = m_vNodeVector.back();
 	m_vNodeVector.pop_back();
-	m_visitedNodes.push_back(n);
-
-	m_activeNode = m_visitedNodes.cend() - 1;
+	//m_visitedNodes.push_back(n);
+	int i = n.pos.x + n.pos.y * m_nMapWidth;
+	m_visitedNodeMap[i] = n;
+	m_activeNode = &m_visitedNodeMap[i];//m_visitedNodes.cend() - 1;
 	bool foundPath = m_activeNode->pos.x == m_goal.x && m_activeNode->pos.y == m_goal.y;
 	solutionState = foundPath;
 	return foundPath;
@@ -123,7 +124,7 @@ int searchSpace::calculateIndex(const vec2& nPos) const
 }
 
 // Add node to rNodeList if position is valid and is not already visited or added but not visited
-bool searchSpace::insertIfValid(const node::nodePtr* pParent, const vec2& nPos, std::vector<pathfinder::node>& rNodeList)
+bool searchSpace::insertIfValid(const node* pParent, const vec2& nPos, std::vector<pathfinder::node>& rNodeList)
 {
 	if (!validateVec(nPos))
 	{
@@ -135,9 +136,13 @@ bool searchSpace::insertIfValid(const node::nodePtr* pParent, const vec2& nPos, 
 
 	if (pParent != nullptr)
 	{
-		g = (**pParent).g + 1;
-	}	
-	if (m_visitedNodes.size() > 0) 
+		g = (*pParent).g + 1;
+	}
+	if (m_visitedNodeMap.find(nPos.x + nPos.y * m_nMapWidth) != m_visitedNodeMap.end())
+	{
+		return false;
+	}
+	/*if (m_visitedNodes.size() > 0) 
 	{
 		node::nodePtr vnEnd = m_visitedNodes.cbegin();
 		for (node::nodePtr it = m_visitedNodes.cend(); true;)
@@ -150,7 +155,7 @@ bool searchSpace::insertIfValid(const node::nodePtr* pParent, const vec2& nPos, 
 			}
 			if (it == m_visitedNodes.cbegin() || it->g + it->h < h + g) break;
 		}
-	}
+	}*/
 
 	node n = node(&nPos, h, g, pParent);
 
@@ -193,18 +198,18 @@ struct less_than_key
 
 int searchSpace::numDuplicates() const
 {
-	std::vector<pathfinder::node> tmp(m_visitedNodes.size());
-	std::copy(m_visitedNodes.begin(), m_visitedNodes.end(), tmp.begin());
-	tmp.insert(tmp.end(), m_vNodeVector.begin(), m_vNodeVector.end());
-	std::sort(tmp.begin(), tmp.end(), less_than_key());
-	node::nodePtr it = tmp.cbegin();
-	node::nodePtr nextIt = tmp.cbegin() + 1;
-	int duplicates = 0;
-	for (; it != tmp.cend() - 1; ++it, ++nextIt)
-	{
-		if (it->pos.x == nextIt->pos.x && it->pos.y == nextIt->pos.y) {
-			++duplicates;
-		}
-	}
-	return duplicates;
+	//std::vector<pathfinder::node> tmp(m_visitedNodes.size());
+	//std::copy(m_visitedNodes.begin(), m_visitedNodes.end(), tmp.begin());
+	//tmp.insert(tmp.end(), m_vNodeVector.begin(), m_vNodeVector.end());
+	//std::sort(tmp.begin(), tmp.end(), less_than_key());
+	//node::nodePtr it = tmp.cbegin();
+	//node::nodePtr nextIt = tmp.cbegin() + 1;
+	//int duplicates = 0;
+	//for (; it != tmp.cend() - 1; ++it, ++nextIt)
+	//{
+	//	if (it->pos.x == nextIt->pos.x && it->pos.y == nextIt->pos.y) {
+	//		++duplicates;
+	//	}
+	//}
+	return 0;// duplicates;
 }

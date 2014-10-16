@@ -21,11 +21,11 @@ struct node
 	vec2 pos;
 	unsigned int h; //Estimated cost to travel to goal
 	unsigned int g; //Cost to travel here
-	const nodePtr* parent;
-	node(const vec2* pPos, unsigned int nH, unsigned int nG, const nodePtr* pParent) :
+	const node* parent;
+	node(const vec2* pPos, unsigned int nH, unsigned int nG, const node* pParent) :
 		pos(pPos->x, pPos->y), h(nH), g(nG), parent(pParent)
 	{}
-	node()
+	node() : parent(nullptr)
 	{
 		h = 0;
 		g = 0;

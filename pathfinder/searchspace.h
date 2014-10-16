@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-
+#include <map>
 #include "node.h"
 
 namespace pathfinder
@@ -32,18 +32,19 @@ public:
 	bool update(bool& solutionState);
 	std::vector<node> m_vNodeVector;
 	std::vector<node> m_visitedNodes;
-
+	std::map<int, node> m_visitedNodeMap;
 private:
 	const int m_nMapWidth;
 	const int m_nMapHeight;
 	unsigned int* const * m_pMap;
 	vec2 m_start;
 	vec2 m_goal;
-	node::nodePtr m_activeNode;
+	node* m_activeNode;
+	//node::nodePtr m_activeNode;
 	inline int calculateIndex(const vec2& nPos) const;
 	bool insertOrdered(const std::vector<pathfinder::node>& insertNodes, std::vector<pathfinder::node>& nodeList) const;
 	bool validateVec(const vec2& nPos) const;
-	bool insertIfValid(const node::nodePtr* pParent, const vec2& nPos, std::vector<pathfinder::node>& rNodeList);
+	bool insertIfValid(const node* pParent, const vec2& nPos, std::vector<pathfinder::node>& rNodeList);
 };
 
 } //namespace pathfinder

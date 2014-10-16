@@ -15,60 +15,56 @@ unsigned int pathfinder::distManhattan(const vec2& sPosA, const vec2& sPosB)
 	return dx + dy;
 }
 
-bool searchSpace::insertOrdered(const std::vector<pathfinder::node>& insertNodes, std::vector<pathfinder::node>& nodeList) const
+bool searchSpace::insertNode(const pathfinder::node& node, const node::nodePtr* pos)
+{
+	int i = node.pos.x + node.pos.y * m_nMapWidth;
+	//if (m_visitedNodeMap.find(i) != m_visitedNodeMap.end()) return false;
+
+	m_visitedNodeMap[i] = node;
+	if (pos == nullptr)
+	{
+		m_vNodeVector.push_back(node);
+		
+	}
+	else
+	{
+		m_vNodeVector.insert(*pos, node);
+	}
+	return true;
+}
+
+bool searchSpace::insertOrdered(const std::vector<pathfinder::node>& insertNodes)
 {
 	if (insertNodes.size() == 0) return false;
-	if (nodeList.size() == 0)
+	if (m_vNodeVector.size() == 0)
 	{
 		node::nodePtr it = insertNodes.cend();
+		node::nodePtr itBeg = insertNodes.cbegin();
 		do
 		{
 			--it;
-			nodeList.push_back(*it);
-		} while (it != insertNodes.cbegin());
+			insertNode(*it, nullptr);
+		} while (it != itBeg);
 		return true;
 	}
 	std::vector<node>::const_iterator currInNode = insertNodes.cbegin();
 	node::nodePtr inNodeEnd = insertNodes.end();
-	node::nodePtr it = nodeList.end();
-	// Add all nodes with lower cost compared to the current lowest
-	while (currInNode != inNodeEnd)
-	{
-		while (it != nodeList.cbegin())
-		{
-			--it;
-			if (currInNode->pos.x == it->pos.x && currInNode->pos.y == it->pos.y)
-			{
-				++currInNode;
-				if (currInNode == inNodeEnd) return true;
-				else break;
-			}
-		}
-		it = nodeList.end() - 1;
-		if (currInNode->h + currInNode->g > it->h + it->g) break;
-		nodeList.push_back(*currInNode);
-		
-		++currInNode;
-	}
-	// If all nodes had lower cost
-	if (currInNode == inNodeEnd) return true;
-
-	// Find correct positions for all other nodes that are supposed to be added
 	int n = 1;
-	it = nodeList.end() - n;
+	node::nodePtr it = m_vNodeVector.end() - n;
+	node::nodePtr nvBegin = m_vNodeVector.cbegin();
 	do
 	{
 		while (it->h + it->g >= currInNode->h + currInNode->g && currInNode != inNodeEnd)
 		{
-			nodeList.insert(it, *currInNode);
+			insertNode(*currInNode, &(it + 1));
 			++currInNode;
-			it = nodeList.end() - n - 1;
+			it = m_vNodeVector.end() - n - 1;
 			if (currInNode == inNodeEnd)
 			{
 				return true;
 			}
 		}
-		if (it != nodeList.cbegin())
+		if (it != nvBegin)
 		{
 			--it;
 			++n;
@@ -79,7 +75,7 @@ bool searchSpace::insertOrdered(const std::vector<pathfinder::node>& insertNodes
 	return true;
 }
 
-bool searchSpace::addNeighbouringNodes()
+bool searchSpace::addNeighboringNodes()
 {
 	// Create nodes
 	std::vector<pathfinder::node> insertNodes;
@@ -87,7 +83,7 @@ bool searchSpace::addNeighbouringNodes()
 	insertIfValid(m_activeNode, vec2(m_activeNode->pos.x - 1, m_activeNode->pos.y), insertNodes);
 	insertIfValid(m_activeNode, vec2(m_activeNode->pos.x, m_activeNode->pos.y + 1), insertNodes);
 	insertIfValid(m_activeNode, vec2(m_activeNode->pos.x, m_activeNode->pos.y - 1), insertNodes);
-	return insertOrdered(insertNodes, m_vNodeVector);
+	return insertOrdered(insertNodes);
 }
 
 bool searchSpace::update(bool& solutionState)
@@ -123,7 +119,7 @@ int searchSpace::calculateIndex(const vec2& nPos) const
 	return m_nMapWidth * nPos.y + nPos.x;
 }
 
-// Add node to rNodeList if position is valid and is not already visited or added but not visited
+
 bool searchSpace::insertIfValid(const node* pParent, const vec2& nPos, std::vector<pathfinder::node>& rNodeList)
 {
 	if (!validateVec(nPos))
@@ -142,20 +138,6 @@ bool searchSpace::insertIfValid(const node* pParent, const vec2& nPos, std::vect
 	{
 		return false;
 	}
-	/*if (m_visitedNodes.size() > 0) 
-	{
-		node::nodePtr vnEnd = m_visitedNodes.cbegin();
-		for (node::nodePtr it = m_visitedNodes.cend(); true;)
-		{
-			--it;
-			vec2 p = it->pos;
-			if (p.x == nPos.x && p.y == nPos.y)
-			{
-				return false;
-			}
-			if (it == m_visitedNodes.cbegin() || it->g + it->h < h + g) break;
-		}
-	}*/
 
 	node n = node(&nPos, h, g, pParent);
 
@@ -195,21 +177,3 @@ struct less_than_key
 		else return false;
 	}
 };
-
-int searchSpace::numDuplicates() const
-{
-	//std::vector<pathfinder::node> tmp(m_visitedNodes.size());
-	//std::copy(m_visitedNodes.begin(), m_visitedNodes.end(), tmp.begin());
-	//tmp.insert(tmp.end(), m_vNodeVector.begin(), m_vNodeVector.end());
-	//std::sort(tmp.begin(), tmp.end(), less_than_key());
-	//node::nodePtr it = tmp.cbegin();
-	//node::nodePtr nextIt = tmp.cbegin() + 1;
-	//int duplicates = 0;
-	//for (; it != tmp.cend() - 1; ++it, ++nextIt)
-	//{
-	//	if (it->pos.x == nextIt->pos.x && it->pos.y == nextIt->pos.y) {
-	//		++duplicates;
-	//	}
-	//}
-	return 0;// duplicates;
-}

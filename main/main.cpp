@@ -3,10 +3,10 @@
 
 int main(int argc, char *argv[])
 {
-	int nMapWidth = 30;
-	int nMapHeight = 30;
+	int nMapWidth = 500;
+	int nMapHeight = 500;
 	unsigned int mapSize = nMapWidth * nMapHeight;
-	unsigned int* pMap = new unsigned int[mapSize];
+	unsigned char* pMap = new unsigned char[mapSize];
 	for (int y = 0; y < nMapHeight; ++y)
 	for (int x = 0; x < nMapWidth; ++x)
 	{
@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 	while (pSearchSpace.m_vNodeVector.size() > 0) {
 		if (pSearchSpace.update(solutionState))
 			assert(!solutionState);
-		pSearchSpace.addNeighbouringNodes();
+		pSearchSpace.addNeighboringNodes();
 	}
 	return 0;
 }

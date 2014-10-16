@@ -20,7 +20,7 @@ public:
 		{
 			nMapWidth = 0;
 			nMapHeight = 0;
-			pMap = new unsigned int[0];
+			pMap = new unsigned char[0];
 		}
 		else
 		{
@@ -31,7 +31,7 @@ public:
 			nMapWidth = 3;
 			nMapHeight = 3;
 			unsigned int mapSize = nMapWidth * nMapHeight;
-			pMap = new unsigned int[mapSize];
+			pMap = new unsigned char[mapSize];
 			for (unsigned int i = 0; i < mapSize; ++i)
 			{
 				pMap[i] = 0;
@@ -42,7 +42,7 @@ public:
 			nMapWidth = 5;
 			nMapHeight = 5;
 			unsigned int mapSize = nMapWidth * nMapHeight;
-			pMap = new unsigned int[mapSize];
+			pMap = new unsigned char[mapSize];
 			for (int y = 0; y < nMapHeight; ++y)
 			for (int x = 0; x < nMapWidth; ++x)
 			{
@@ -54,7 +54,7 @@ public:
 			nMapWidth = 500;
 			nMapHeight = 500;
 			unsigned int mapSize = nMapWidth * nMapHeight;
-			pMap = new unsigned int[mapSize];
+			pMap = new unsigned char[mapSize];
 			for (int y = 0; y < nMapHeight; ++y)
 			for (int x = 0; x < nMapWidth; ++x)
 			{
@@ -66,7 +66,7 @@ public:
 			nMapWidth = 10;
 			nMapHeight = 10;
 			unsigned int mapSize = nMapWidth * nMapHeight;
-			pMap = new unsigned int[mapSize];
+			pMap = new unsigned char[mapSize];
 			for (int y = 0; y < nMapHeight; ++y)
 			for (int x = 0; x < nMapWidth; ++x)
 			{
@@ -86,7 +86,7 @@ protected:
 		delete[] pMap;
 		delete pSearchSpace;
 	}
-	unsigned int* pMap;
+	unsigned char* pMap;
 	pathfinder::vec2 sStart;
 	pathfinder::vec2 sGoal;
 	int nMapWidth;
@@ -108,7 +108,6 @@ TEST_F(PathfinderTester, InsertInitialNodes)
 	bool solutionState = false;
 	EXPECT_TRUE(pSearchSpace->insertInitialNodes(start, goal));
 	EXPECT_FALSE(pSearchSpace->update(solutionState));
-	EXPECT_EQ(0, pSearchSpace->numDuplicates());
 }
 
 TEST_F(PathfinderTester, StartAndGoalTests)
@@ -138,10 +137,9 @@ TEST_F(PathfinderTester, StartAndGoalTests)
 	EXPECT_TRUE(pSearchSpace->insertInitialNodes(p1, p1));
 	EXPECT_TRUE(pSearchSpace->update(solutionState));
 	EXPECT_TRUE(solutionState);
-	EXPECT_EQ(0, pSearchSpace->numDuplicates());
 }
 
-TEST_F(PathfinderTester, AddNeighbouringNodes)
+TEST_F(PathfinderTester, AddNeighboringNodes)
 {
 	createMap(MapTypeSimple);
 	pathfinder::vec2 start(1, 1);
@@ -150,15 +148,14 @@ TEST_F(PathfinderTester, AddNeighbouringNodes)
 	EXPECT_TRUE(pSearchSpace->insertInitialNodes(start, goal));
 	EXPECT_FALSE(pSearchSpace->update(solutionState));
 	EXPECT_EQ(0, pSearchSpace->m_vNodeVector.size());
-	pSearchSpace->addNeighbouringNodes();
+	pSearchSpace->addNeighboringNodes();
 	
 	EXPECT_EQ(4, pSearchSpace->m_vNodeVector.size());
 	EXPECT_FALSE(pSearchSpace->update(solutionState));
 
-	pSearchSpace->addNeighbouringNodes();
+	pSearchSpace->addNeighboringNodes();
 	EXPECT_TRUE(pSearchSpace->update(solutionState));
 	EXPECT_TRUE(solutionState);
-	EXPECT_EQ(0, pSearchSpace->numDuplicates());
 }
 
 TEST_F(PathfinderTester, NoSolutionSmall)
@@ -169,9 +166,8 @@ TEST_F(PathfinderTester, NoSolutionSmall)
 	while (pSearchSpace->m_vNodeVector.size() > 0) {
 		if (pSearchSpace->update(solutionState))
 			EXPECT_FALSE(solutionState);
-		pSearchSpace->addNeighbouringNodes();
+		pSearchSpace->addNeighboringNodes();
 	}
-	EXPECT_EQ(0, pSearchSpace->numDuplicates());
 }
 
 TEST_F(PathfinderTester, NoSolutionDiagonal)
@@ -182,9 +178,8 @@ TEST_F(PathfinderTester, NoSolutionDiagonal)
 	while (pSearchSpace->m_vNodeVector.size() > 0) {
 		if (pSearchSpace->update(solutionState))
 			EXPECT_FALSE(solutionState);
-		pSearchSpace->addNeighbouringNodes();
+		pSearchSpace->addNeighboringNodes();
 	}
-	EXPECT_EQ(0, pSearchSpace->numDuplicates());
 }
 
 TEST_F(PathfinderTester, NoSolutionLarge)
@@ -195,7 +190,6 @@ TEST_F(PathfinderTester, NoSolutionLarge)
 	while (pSearchSpace->m_vNodeVector.size() > 0) {
 		if (pSearchSpace->update(solutionState))
 			EXPECT_FALSE(solutionState);
-		pSearchSpace->addNeighbouringNodes();
+		pSearchSpace->addNeighboringNodes();
 	}
-	EXPECT_EQ(0, pSearchSpace->numDuplicates());
 }

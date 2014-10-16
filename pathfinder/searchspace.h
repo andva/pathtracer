@@ -20,7 +20,7 @@ namespace
 class searchSpace
 {
 public:
-	searchSpace(const int nMapWidth, const int nMapHeight, const int maxSteps, const unsigned char* const * pMap) :
+	searchSpace(const int nMapWidth, const int nMapHeight, const unsigned int maxSteps, const unsigned char* const * pMap) :
 		m_nMapWidth(nMapWidth), m_nMapHeight(nMapHeight), m_pMap(pMap), m_maxSteps(maxSteps)
 	{
 		m_vNodeVector.reserve(int(nMapWidth * nMapHeight / 9));
@@ -43,11 +43,11 @@ public:
 	int getSolution(int* pOutBuffer) const;
 
 	// Returns number of nodes yet to be visited
-	int getSearchSpaceSize() const { return m_vNodeVector.size(); }
+	//int getSearchSpaceSize() const { return m_vNodeVector.size(); }
 private:
 	const int m_nMapWidth;
 	const int m_nMapHeight;
-	const int m_maxSteps;
+	const unsigned int m_maxSteps;
 	const unsigned char* const * m_pMap;
 	vec2 m_start;
 	vec2 m_goal;
@@ -56,7 +56,7 @@ private:
 	std::vector<node> m_vNodeVector;
 	std::map<int, node> m_visitedNodeMap;
 
-	bool insertNode(const node& node, const node::nodePtr* pos);
+	bool insertNode(const node& node, const node::nodePtr* itr);
 	inline int calculateIndex(const vec2& nPos) const;
 	bool insertOrdered(const std::vector<node>& insertNodes);
 	

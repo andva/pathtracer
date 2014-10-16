@@ -15,20 +15,17 @@ unsigned int pathfinder::distManhattan(const vec2& sPosA, const vec2& sPosB)
 	return dx + dy;
 }
 
-bool searchSpace::insertNode(const pathfinder::node& node, const node::nodePtr* pos)
+bool searchSpace::insertNode(const pathfinder::node& node, const node::nodePtr* itr)
 {
 	int i = node.pos.x + node.pos.y * m_nMapWidth;
-	//if (m_visitedNodeMap.find(i) != m_visitedNodeMap.end()) return false;
-
 	m_visitedNodeMap[i] = node;
-	if (pos == nullptr)
+	if (itr == nullptr)
 	{
 		m_vNodeVector.push_back(node);
-		
 	}
 	else
 	{
-		m_vNodeVector.insert(*pos, node);
+		m_vNodeVector.insert(*itr, node);
 	}
 	return true;
 }

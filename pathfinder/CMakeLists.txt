@@ -6,10 +6,10 @@ set(PATHFINDER_SRC
 	)
 
 set(PATHFINDER_HEAD 
-	pathfinder.hpp
-	searchspace.hpp
-	node.hpp
-	vec2.hpp
+	pathfinder.h
+	searchspace.h
+	node.h
+	vec2.h
 	)
 
 set(PLATFORM_COMPILE_FLAGS

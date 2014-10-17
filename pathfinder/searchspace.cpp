@@ -1,4 +1,4 @@
-#include "searchspace.hpp"
+#include "searchspace.h"
 
 #include <algorithm>
 #include <vector>

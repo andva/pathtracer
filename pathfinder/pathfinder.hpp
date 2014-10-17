@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
-#include "node.h"
-#include "searchspace.h"
+#include "node.hpp"
+#include "searchspace.hpp"
 
 
 namespace pathfinder {

@@ -1,12 +1,15 @@
 set(PATHFINDER_SRC
 	pathfinder.cpp
 	searchspace.cpp
+	node.cpp
+	vec2.cpp
 	)
 
 set(PATHFINDER_HEAD 
-	pathfinder.h
-	node.h
-	searchspace.h
+	pathfinder.hpp
+	searchspace.hpp
+	node.hpp
+	vec2.hpp
 	)
 
 set(PLATFORM_COMPILE_FLAGS

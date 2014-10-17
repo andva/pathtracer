@@ -1,24 +1,26 @@
-#include "pathfinder.h"
-
-#include "searchspace.h"
-#include "node.h"
+#include "pathfinder.hpp"
 
 #include <math.h>
+
+#include "searchspace.hpp"
+#include "node.hpp"
+
+
 
 namespace pathfinder {
 
 int FindPath(const int nStartX, const int nStartY, const int nTargetX, const int nTargetY, const unsigned char* pMap, const int nMapWidth, const int nMapHeight, int* pOutBuffer, const int nOutBufferSize)
 {
-	pathfinder::searchSpace finder(nMapWidth, nMapHeight, nOutBufferSize, &pMap);
+	SearchSpace finder(nMapWidth, nMapHeight, nOutBufferSize, pMap);
 
-	if (!finder.insertInitialNodes(vec2(nStartX, nStartY), vec2(nTargetX, nTargetY)))
+	if (!finder.insertInitialNodes(Vec2(nStartX, nStartY), Vec2(nTargetX, nTargetY)))
 	{
 		return -1;
 	}
 	else
 	{
 		bool solutionState = false;
-		while (!finder.update(solutionState))
+		while (!finder.update(&solutionState))
 		{
 			finder.addNeighboringNodes();
 		}
@@ -27,4 +29,4 @@ int FindPath(const int nStartX, const int nStartY, const int nTargetX, const int
 	return -1;
 }
 
-} // namespace pathfinder
+}  // namespace pathfinder

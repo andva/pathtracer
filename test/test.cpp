@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <pathfinder/pathfinder.h>
 #include <pathfinder/searchspace.h>
+#include <memory>
 
 class PathfinderTester : public ::testing::Test  {
  public:
@@ -12,10 +13,6 @@ class PathfinderTester : public ::testing::Test  {
 		MapTypeSmallDiagonal,
 		MapTypeSingleLane,
 	};
-
-	int findPath(const pathfinder::Vec2& start, const pathfinder::Vec2& goal) {
-		return pathfinder::FindPath(start.x, start.y, goal.x, goal.y, m_map, m_mapWidth, m_mapHeight, &m_searchSpace, m_outBuffer, m_outBufferSize);
-	}
 
 	void createMap(const MapType mapType, const unsigned int maxSteps) {
 		delete[] m_map;
@@ -71,7 +68,7 @@ class PathfinderTester : public ::testing::Test  {
 				m_map[i] = 0;
 			}
 		}
-		m_searchSpace = pathfinder::SearchSpace(m_mapWidth, m_mapHeight, maxSteps, m_map);
+        m_pathFinder.reset(new pathfinder::PathFinder(m_mapWidth, m_mapHeight, m_outBufferSize, m_map));
 	}
 
  protected:
@@ -91,7 +88,7 @@ class PathfinderTester : public ::testing::Test  {
 	pathfinder::Vec2 m_goal;
 	int m_mapWidth;
 	int m_mapHeight;
-	pathfinder::SearchSpace m_searchSpace;
+    std::unique_ptr<pathfinder::PathFinder> m_pathFinder;
 	int* m_outBuffer;
 	int m_outBufferSize;
 };
@@ -102,40 +99,56 @@ TEST_F(PathfinderTester, ManhattanDistance) {
 }
 
 TEST_F(PathfinderTester, InsertInitialNodes) {
-	createMap(MapTypeSimple, 2);
+    unsigned int maxSteps = 2;
+	createMap(MapTypeSimple, maxSteps);
 	pathfinder::Vec2 start(1, 1);
 	pathfinder::Vec2 goal(2, 0);
-	bool solutionState = false;
-	EXPECT_TRUE(m_searchSpace.insertInitialNodes(start, goal));
-	EXPECT_FALSE(m_searchSpace.update(&solutionState));
+    pathfinder::PathFinder finder(m_mapWidth, m_mapHeight, maxSteps, m_map);
+    pathfinder::SearchSpace searchSpace(m_mapWidth, m_mapHeight, start, goal);
+    EXPECT_TRUE(finder.insertInitialNodes(start, goal, &searchSpace));
+    EXPECT_FALSE(finder.update(&searchSpace));
 }
 
 TEST_F(PathfinderTester, StartAndGoalTests) {
-	createMap(MapTypeSimple, 2);
+    unsigned int maxSteps = 2;
+    createMap(MapTypeSimple, maxSteps);
 	pathfinder::Vec2 p1(1, 1);
 	pathfinder::Vec2 p2(-1, 1);
 	pathfinder::Vec2 p3(m_mapWidth, 1);
 	pathfinder::Vec2 p4(1, m_mapHeight);
-	bool solutionState = false;
-	EXPECT_FALSE(m_searchSpace.insertInitialNodes(p1, p2));
-    EXPECT_TRUE(m_searchSpace.update(&solutionState));
-	EXPECT_FALSE(solutionState);
-
-	EXPECT_FALSE(m_searchSpace.insertInitialNodes(p3, p2));
-    EXPECT_TRUE(m_searchSpace.update(&solutionState));
-	EXPECT_FALSE(solutionState);
-
-	EXPECT_FALSE(m_searchSpace.insertInitialNodes(p4, p2));
-    EXPECT_TRUE(m_searchSpace.update(&solutionState));
-	EXPECT_FALSE(solutionState);
-
-	EXPECT_FALSE(m_searchSpace.insertInitialNodes(p2, p2));
-    EXPECT_TRUE(m_searchSpace.update(&solutionState));
-	EXPECT_FALSE(solutionState);
-
-	EXPECT_TRUE(m_searchSpace.insertInitialNodes(p1, p1));
-    EXPECT_TRUE(m_searchSpace.update(&solutionState));
-	EXPECT_TRUE(solutionState);
+    
+    pathfinder::PathFinder finder(m_mapWidth, m_mapHeight, maxSteps, m_map);
+    {
+        pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, p1, p2);
+        EXPECT_FALSE(finder.insertInitialNodes(p1, p2, &sSpace));
+        EXPECT_TRUE(finder.update(&sSpace));
+        EXPECT_EQ(-1, sSpace.getPathToTarget(m_outBuffer));
+    }
+    {
+        pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, p3, p2);
+        EXPECT_FALSE(finder.insertInitialNodes(p3, p2, &sSpace));
+        EXPECT_TRUE(finder.update(&sSpace));
+        EXPECT_EQ(-1, sSpace.getPathToTarget(m_outBuffer));
+    }
+    {
+        pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, p4, p2);
+        EXPECT_FALSE(finder.insertInitialNodes(p4, p2, &sSpace));
+        EXPECT_TRUE(finder.update(&sSpace));
+        EXPECT_EQ(-1, sSpace.getPathToTarget(m_outBuffer));
+    }
+    {
+        pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, p4, p2);
+        EXPECT_FALSE(finder.insertInitialNodes(p2, p2, &sSpace));
+        EXPECT_TRUE(finder.update(&sSpace));
+        EXPECT_EQ(-1, sSpace.getPathToTarget(m_outBuffer));
+    }
+    {
+        pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, p1, p1);
+        EXPECT_TRUE(finder.insertInitialNodes(p1, p1, &sSpace));
+        EXPECT_TRUE(finder.update(&sSpace));
+        EXPECT_NE(-1, sSpace.getPathToTarget(m_outBuffer));
+    }
+    
 }
 
 TEST_F(PathfinderTester, AddNeighboringNodes) {
@@ -143,61 +156,73 @@ TEST_F(PathfinderTester, AddNeighboringNodes) {
 	createMap(MapTypeSimple, outBufferSize);
 	pathfinder::Vec2 start(1, 1);
 	pathfinder::Vec2 goal(2, 0);
-	bool solutionState = false;
-	EXPECT_TRUE(m_searchSpace.insertInitialNodes(start, goal));
-    EXPECT_FALSE(m_searchSpace.update(&solutionState));
-	m_searchSpace.addNeighboringNodes();
+    pathfinder::PathFinder finder(m_mapWidth, m_mapHeight, outBufferSize, m_map);
+    pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, start, goal);
+    EXPECT_TRUE(finder.insertInitialNodes(start, goal, &sSpace));
+    EXPECT_FALSE(finder.update(&sSpace));
+    finder.addNeighboringNodes(&sSpace);
 	
-    EXPECT_FALSE(m_searchSpace.update(&solutionState));
-	m_searchSpace.addNeighboringNodes();
+    EXPECT_FALSE(finder.update(&sSpace));
+    finder.addNeighboringNodes(&sSpace);
 
-    EXPECT_TRUE(m_searchSpace.update(&solutionState));
-	EXPECT_TRUE(solutionState);
-	int steps = m_searchSpace.getSolution(m_outBuffer);
+    EXPECT_TRUE(finder.update(&sSpace));
+    int steps = sSpace.getPathToTarget(m_outBuffer);
 	EXPECT_NE(-1, steps);
-    EXPECT_TRUE(m_searchSpace.getNumVisitedNodes() > 1);
+    EXPECT_TRUE(sSpace.getNumVisitedNodes() > 1);
 }
 
 TEST_F(PathfinderTester, NoSolutionSmall) {
 	createMap(MapTypeSmallImpossible, 10);
-	int numSteps = findPath(pathfinder::Vec2(0, 2), pathfinder::Vec2(m_mapWidth - 1, 2));
+    
+    pathfinder::Vec2 start = pathfinder::Vec2(0, 2);
+    pathfinder::Vec2 target = pathfinder::Vec2(m_mapWidth - 1, 2);
+
+    pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, start, target);
+    int numSteps = m_pathFinder->findPath(&sSpace, m_outBuffer);
 	EXPECT_EQ(-1, numSteps);
-    EXPECT_TRUE(m_searchSpace.getNumVisitedNodes() > 1);
+    EXPECT_TRUE(sSpace.getNumVisitedNodes() > 1);
 }
 
 TEST_F(PathfinderTester, NoSolutionDiagonal) {
 	createMap(MapTypeSmallDiagonal, 10);
 	pathfinder::Vec2 start(0, m_mapHeight / 2);
-	pathfinder::Vec2 goal(m_mapWidth - 1, m_mapHeight / 2);
-	int numSteps = findPath(start, goal);
+	pathfinder::Vec2 target(m_mapWidth - 1, m_mapHeight / 2);
+    pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, start, target);
+    int numSteps = m_pathFinder->findPath(&sSpace, m_outBuffer);
 	EXPECT_EQ(-1, numSteps);
-    EXPECT_TRUE(m_searchSpace.getNumVisitedNodes() > 1);
+    EXPECT_TRUE(sSpace.getNumVisitedNodes() > 1);
 }
 
 TEST_F(PathfinderTester, NoSolutionLarge) {
-	createMap(MapTypeLargeImpossible, 20);
+	createMap(MapTypeLargeImpossible, 900);
 	pathfinder::Vec2 start(0, m_mapHeight / 2);
-	pathfinder::Vec2 goal(m_mapWidth - 1, m_mapHeight / 2);
-	int numSteps = findPath(start, goal);
+	pathfinder::Vec2 target(m_mapWidth - 1, m_mapHeight / 2);
+    pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, start, target);
+    int numSteps = m_pathFinder->findPath(&sSpace, m_outBuffer);
 	EXPECT_EQ(-1, numSteps);
-    EXPECT_TRUE(m_searchSpace.getNumVisitedNodes() > 1);
+    EXPECT_TRUE(sSpace.getNumVisitedNodes() > 1);
 }
 
 TEST_F(PathfinderTester, SingleLaneMap) {
 	createMap(MapTypeSingleLane, 10);
-	int numSteps = findPath(pathfinder::Vec2(0, 0), pathfinder::Vec2(m_mapWidth - 1, 0));
+    pathfinder::Vec2 start(0, 0);
+    pathfinder::Vec2 target(m_mapWidth - 1, 0);
+    pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, start, target);
+    int numSteps = m_pathFinder->findPath(&sSpace, m_outBuffer);
 	EXPECT_NE(-1, numSteps);
-    EXPECT_TRUE(m_searchSpace.getNumVisitedNodes() > 1);
+    EXPECT_TRUE(sSpace.getNumVisitedNodes() > 1);
 }
 
 TEST_F(PathfinderTester, LoopAllowedLength) {
     createMap(MapTypeSimple, 0);
 	pathfinder::Vec2 start(0, m_mapHeight / 2);
-	pathfinder::Vec2 goal(m_mapWidth - 2, m_mapHeight / 2);
+    pathfinder::Vec2 target(m_mapWidth - 2, m_mapHeight / 2);
 	for (int i = 0; i < m_mapWidth; ++i) {
 		createMap(MapTypeSimple, i);
-		int numSteps = findPath(start, goal);
-		EXPECT_EQ(goal.x - start.x >= i, numSteps == -1);
-        EXPECT_TRUE(m_searchSpace.getNumVisitedNodes() > 1);
+        pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, start, target);
+        int numSteps = m_pathFinder->findPath(&sSpace, m_outBuffer);
+        bool canFindSolution = target.x - start.x < m_outBufferSize;
+        EXPECT_EQ(canFindSolution, numSteps != -1);
+        EXPECT_TRUE(canFindSolution ? sSpace.getNumVisitedNodes() > 1 : sSpace.getNumVisitedNodes() == 1);
 	}
 }

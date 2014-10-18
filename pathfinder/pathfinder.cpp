@@ -2,6 +2,7 @@
 
 #include <math.h>
 
+#include "objectpool.h"
 #include "searchspace.h"
 #include "node.h"
 
@@ -39,7 +40,9 @@ PathFinder::PathFinder(const int nMapWidth, const int nMapHeight,
 int PathFinder::findPath(const Vec2& start, const Vec2& target, int* pOutBuffer)
 {
     SearchSpace searchSpace(m_mapWidth, m_mapHeight, start, target);
-    return findPath(&searchSpace, pOutBuffer);
+    int asd = findPath(&searchSpace, pOutBuffer);
+    ObjectPool::getInstance()->addResource(m_mapWidth, m_mapHeight, searchSpace, m_map);
+    return asd;
 }
 
 int PathFinder::findPath(SearchSpace* pSearchSpace, int* pOutBuffer) {
@@ -50,13 +53,13 @@ int PathFinder::findPath(SearchSpace* pSearchSpace, int* pOutBuffer) {
         while (!update(pSearchSpace)) {
             addNeighboringNodes(pSearchSpace);
         }
+        ObjectPool::getInstance()->addResource(m_mapWidth, m_mapHeight, *pSearchSpace, m_map);
         return pSearchSpace->getPathToTarget(pOutBuffer);
     }
     return -1;
 }
 
 bool PathFinder::addNeighboringNodes(SearchSpace* pSearchSpace) {
-    // Create nodes
     std::vector<Node> insertNodes;
     const Node& activeNode = pSearchSpace->getActiveNode();
     Vec2 pos = activeNode.pos;

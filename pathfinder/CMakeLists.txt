@@ -3,6 +3,7 @@ set(PATHFINDER_SRC
 	searchspace.cpp
 	node.cpp
 	vec2.cpp
+    objectpool.cpp
 	)
 
 set(PATHFINDER_HEAD 
@@ -10,6 +11,7 @@ set(PATHFINDER_HEAD
 	searchspace.h
 	node.h
 	vec2.h
+    objectpool.h
 	)
 
 set(PLATFORM_COMPILE_FLAGS

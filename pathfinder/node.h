@@ -13,9 +13,8 @@ struct Node {
     unsigned int h; //Estimated cost to travel to goal
     unsigned int g; //Cost to travel here
     int parent;
-    //const Node* parent;
 
-    Node(const Vec2* pPos, unsigned int nH, unsigned int nG, const int nParentId); //const Node* pParent);
+    Node(const Vec2* pPos, unsigned int nH, unsigned int nG, const int nParentId);
     Node();
     Node(const Node& other);
 };

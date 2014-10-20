@@ -1,5 +1,6 @@
 #include "node.h"
 namespace pathfinder {
+
 Node::Node(const Vec2* pPos, unsigned int nH, unsigned int nG, const int nParentId) :
 pos(pPos->x, pPos->y),
 h(nH),

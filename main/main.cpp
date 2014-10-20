@@ -19,5 +19,8 @@ int main(int argc, char *argv[]) {
 	int* outBuffer = new int[maxSteps];
 	int pathLength = pathfinder::FindPath(start.x, start.y, goal.x, goal.y, pMap, nMapWidth, nMapHeight, outBuffer, maxSteps);
 	assert(pathLength == -1);
+
+    pathLength = pathfinder::FindPath(start.x, start.y, goal.x, goal.y, pMap, nMapWidth, nMapHeight, outBuffer, maxSteps);
+    assert(pathLength == -1);
 	return 0;
 }

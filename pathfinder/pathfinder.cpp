@@ -49,14 +49,15 @@ int PathFinder::findPath(const Vec2& start, const Vec2& target, const int nMaxSt
     SearchSpace searchSpace = getSearchSpacePool()->getResource(m_mapWidth, m_mapHeight, nMaxSteps, start, target, m_map);
     if (searchSpace.getNumVisitedNodes() == 0) {
         if (!insertInitialNodes(searchSpace.getStart(), searchSpace.getTarget(), &searchSpace)) {
-            return -1;
+            return SearchSpace::NoSolution;
         }
     }
     while (!searchSpace.updateActiveNode()) {
         addNeighboringNodes(&searchSpace);
     }
-    PathFinder::getSearchSpacePool()->addResource(m_mapWidth, m_mapHeight, searchSpace, m_map);
-    return searchSpace.getPathToTarget(pOutBuffer);
+    int numSteps = searchSpace.getPathToTarget(pOutBuffer);
+    if (numSteps == SearchSpace::NoSolution) PathFinder::getSearchSpacePool()->addResource(m_mapWidth, m_mapHeight, searchSpace, m_map);
+    return numSteps;
 }
 
 bool PathFinder::addNeighboringNodes(SearchSpace* pSearchSpace) {

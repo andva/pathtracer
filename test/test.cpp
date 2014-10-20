@@ -17,10 +17,11 @@ class PathfinderTester : public ::testing::Test  {
 		MapTypeSingleLane,
         MapTypeMiddleWall,
 	};
+
     void findPath(const pathfinder::Vec2& start, const pathfinder::Vec2& target, const int nMaxSteps, int* pOutBuffer) {
 
         int steps = m_pathFinder->findPath(start, target, nMaxSteps, pOutBuffer);
-        EXPECT_NE(-1, steps);
+        EXPECT_EQ(m_solveable, steps != pathfinder::SearchSpace::NoSolution);
         testSolution(nMaxSteps, steps, start, target, pOutBuffer);
     };
 	void createMap(const MapType mapType, const unsigned int maxSteps) {
@@ -32,6 +33,7 @@ class PathfinderTester : public ::testing::Test  {
 			m_mapWidth = 0;
 			m_mapHeight = 0;
 			m_map = new unsigned char[0];
+            m_solveable = false;
 		} else if (mapType == MapTypeSimple) {
 			m_mapWidth = 5;
 			m_mapHeight = 5;
@@ -40,6 +42,7 @@ class PathfinderTester : public ::testing::Test  {
 			for (unsigned int i = 0; i < mapSize; ++i) {
 				m_map[i] = 0;
 			}
+            m_solveable = true;
 		} else if (mapType == MapTypeSmallImpossible) {
 			m_mapWidth = 5;
 			m_mapHeight = 5;
@@ -49,6 +52,7 @@ class PathfinderTester : public ::testing::Test  {
 			for (int x = 0; x < m_mapWidth; ++x) {
 				m_map[x + y * m_mapWidth] = (x == 2) ? 1 : 0;
 			}
+            m_solveable = false;
 		} else if (mapType == MapTypeLargeImpossible) {
 			m_mapWidth = 500;
 			m_mapHeight = 500;
@@ -58,6 +62,7 @@ class PathfinderTester : public ::testing::Test  {
 			for (int x = 0; x < m_mapWidth; ++x) {
 				m_map[x + y * m_mapWidth] = (x == m_mapWidth - 3) ? 1 : 0;
 			}
+            m_solveable = false;
 		} else if (mapType == MapTypeSmallDiagonal) {
 			m_mapWidth = 10;
 			m_mapHeight = 10;
@@ -67,6 +72,7 @@ class PathfinderTester : public ::testing::Test  {
 			for (int x = 0; x < m_mapWidth; ++x) {
 				m_map[x + y * m_mapWidth] = (x == y) ? 1 : 0;
 			}
+            m_solveable = false;
 		} else if (mapType == MapTypeSingleLane) {
 			m_mapWidth = 10;
 			m_mapHeight = 1;
@@ -75,6 +81,7 @@ class PathfinderTester : public ::testing::Test  {
 			for (unsigned int i = 0; i < mapSize; ++i) {
 				m_map[i] = 0;
 			}
+            m_solveable = true;
         } else if (mapType == MapTypeMiddleWall) {
             m_mapWidth = 3;
             m_mapHeight = 3;
@@ -82,8 +89,10 @@ class PathfinderTester : public ::testing::Test  {
             m_map = new unsigned char[mapSize];
             for (int y = 0; y < m_mapHeight; ++y)
             for (int x = 0; x < m_mapWidth; ++x) {
-                m_map[x + y * m_mapWidth] = (x == m_mapWidth / 2 && (y != 0 || y != m_mapHeight - 1)) ? 1 : 0;
+                int i = (x == m_mapWidth / 2 && y > 0 && y < m_mapHeight - 1) ? 1 : 0;
+                m_map[x + y * m_mapWidth] = i;
             }
+            m_solveable = true;
         }
 
         m_pathFinder.reset(new pathfinder::PathFinder(m_mapWidth, m_mapHeight, m_outBufferSize, m_map));
@@ -113,6 +122,7 @@ class PathfinderTester : public ::testing::Test  {
 	pathfinder::Vec2 m_goal;
 	int m_mapWidth;
 	int m_mapHeight;
+    bool m_solveable;
     std::unique_ptr<pathfinder::PathFinder> m_pathFinder;
 	int* m_outBuffer;
 	int m_outBufferSize;
@@ -147,31 +157,31 @@ TEST_F(PathfinderTester, StartAndGoalTests) {
         pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, maxSteps, p1, p2);
         EXPECT_FALSE(finder.insertInitialNodes(p1, p2, &sSpace));
         EXPECT_TRUE(sSpace.updateActiveNode());
-        EXPECT_EQ(-1, sSpace.getPathToTarget(m_outBuffer));
+        EXPECT_EQ(pathfinder::SearchSpace::NoSolution, sSpace.getPathToTarget(m_outBuffer));
     }
     {
         pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, maxSteps, p3, p2);
         EXPECT_FALSE(finder.insertInitialNodes(p3, p2, &sSpace));
         EXPECT_TRUE(sSpace.updateActiveNode());
-        EXPECT_EQ(-1, sSpace.getPathToTarget(m_outBuffer));
+        EXPECT_EQ(pathfinder::SearchSpace::NoSolution, sSpace.getPathToTarget(m_outBuffer));
     }
     {
         pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, maxSteps, p4, p2);
         EXPECT_FALSE(finder.insertInitialNodes(p4, p2, &sSpace));
         EXPECT_TRUE(sSpace.updateActiveNode());
-        EXPECT_EQ(-1, sSpace.getPathToTarget(m_outBuffer));
+        EXPECT_EQ(pathfinder::SearchSpace::NoSolution, sSpace.getPathToTarget(m_outBuffer));
     }
     {
         pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, maxSteps, p4, p2);
         EXPECT_FALSE(finder.insertInitialNodes(p2, p2, &sSpace));
         EXPECT_TRUE(sSpace.updateActiveNode());
-        EXPECT_EQ(-1, sSpace.getPathToTarget(m_outBuffer));
+        EXPECT_EQ(pathfinder::SearchSpace::NoSolution, sSpace.getPathToTarget(m_outBuffer));
     }
     {
         pathfinder::SearchSpace sSpace(m_mapWidth, m_mapHeight, maxSteps, p1, p1);
         EXPECT_TRUE(finder.insertInitialNodes(p1, p1, &sSpace));
         EXPECT_TRUE(sSpace.updateActiveNode());
-        EXPECT_NE(-1, sSpace.getPathToTarget(m_outBuffer));
+        EXPECT_NE(pathfinder::SearchSpace::NoSolution, sSpace.getPathToTarget(m_outBuffer));
     }
     
 }
@@ -192,7 +202,7 @@ TEST_F(PathfinderTester, AddNeighboringNodes) {
 
     EXPECT_TRUE(sSpace.updateActiveNode());
     int steps = sSpace.getPathToTarget(m_outBuffer);
-	EXPECT_NE(-1, steps);
+    EXPECT_NE(pathfinder::SearchSpace::NoSolution, steps);
     testSolution(outBufferSize, steps, start, target, m_outBuffer);
     EXPECT_TRUE(sSpace.getNumVisitedNodes() > 1);
 }
@@ -204,7 +214,7 @@ TEST_F(PathfinderTester, NoSolutionSmall) {
     pathfinder::Vec2 start = pathfinder::Vec2(0, 2);
     pathfinder::Vec2 target = pathfinder::Vec2(m_mapWidth - 1, 2);
     int numSteps = m_pathFinder->findPath(start, target, outBufferSize, m_outBuffer);
-	EXPECT_EQ(-1, numSteps);
+    EXPECT_EQ(pathfinder::SearchSpace::NoSolution, numSteps);
 }
 
 TEST_F(PathfinderTester, NoSolutionDiagonal) {
@@ -213,16 +223,25 @@ TEST_F(PathfinderTester, NoSolutionDiagonal) {
 	pathfinder::Vec2 start(0, m_mapHeight / 2);
 	pathfinder::Vec2 target(m_mapWidth - 1, m_mapHeight / 2);
     int numSteps = m_pathFinder->findPath(start, target, outBufferSize, m_outBuffer);
-	EXPECT_EQ(-1, numSteps);
+    EXPECT_EQ(pathfinder::SearchSpace::NoSolution, numSteps);
 }
 
 TEST_F(PathfinderTester, NoSolutionLarge) {
-    const unsigned int outBufferSize = 10;
+    const unsigned int outBufferSize = 1000;
     createMap(MapTypeLargeImpossible, outBufferSize);
 	pathfinder::Vec2 start(0, m_mapHeight / 2);
 	pathfinder::Vec2 target(m_mapWidth - 1, m_mapHeight / 2);
     int numSteps = m_pathFinder->findPath(start, target, outBufferSize, m_outBuffer);
-	EXPECT_EQ(-1, numSteps);
+    EXPECT_EQ(pathfinder::SearchSpace::NoSolution, numSteps);
+}
+
+TEST_F(PathfinderTester, NoSolutionLargeCached) {
+    const unsigned int outBufferSize = 1000;
+    createMap(MapTypeLargeImpossible, outBufferSize);
+    pathfinder::Vec2 start(0, m_mapHeight / 2);
+    pathfinder::Vec2 target(m_mapWidth - 1, m_mapHeight / 2);
+    int numSteps = m_pathFinder->findPath(start, target, outBufferSize, m_outBuffer);
+    EXPECT_EQ(pathfinder::SearchSpace::NoSolution, numSteps);
 }
 
 TEST_F(PathfinderTester, SingleLaneMap) {
@@ -231,7 +250,7 @@ TEST_F(PathfinderTester, SingleLaneMap) {
     pathfinder::Vec2 start(0, 0);
     pathfinder::Vec2 target(m_mapWidth - 1, 0);
     int numSteps = m_pathFinder->findPath(start, target, outBufferSize, m_outBuffer);
-	EXPECT_NE(-1, numSteps);
+    EXPECT_NE(pathfinder::SearchSpace::NoSolution, numSteps);
     testSolution(outBufferSize, numSteps, start, target, m_outBuffer);
 }
 
@@ -255,22 +274,55 @@ TEST_F(PathfinderTester, CacheUsed) {
     for (int i = m_mapWidth + 1; i < m_mapWidth * m_mapHeight; ++i) {
         createMap(MapTypeMiddleWall, i);
         int numSteps = m_pathFinder->findPath(start, target, static_cast<unsigned int>(i), m_outBuffer);
-        EXPECT_EQ(numSteps == -1, i >= 5);
+        EXPECT_EQ(numSteps == pathfinder::SearchSpace::NoSolution, i < 5);
         testSolution(i, numSteps, start, target, m_outBuffer);
     }
 }
 
-TEST_F(PathfinderTester, MultiThreads) {
+TEST_F(PathfinderTester, MultiThreadsSolveable) {
     const unsigned int outBufferSize = 10;
     createMap(MapTypeSimple, outBufferSize);
-    int* t1OutBuffer = new int[outBufferSize];
-    std::thread t1(
-        &PathfinderTester::findPath,
-        this,
-        pathfinder::Vec2(0, 0),
-        pathfinder::Vec2(4, 0),
-        outBufferSize,
-        t1OutBuffer
-        );
-    t1.join();
+    std::vector<int*> outBuffers;
+    std::vector<std::thread*> threads;
+    const int NUM_THREADS = 5;
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        outBuffers.push_back(new int[outBufferSize]);
+        threads.push_back(new std::thread(
+            &PathfinderTester::findPath,
+            this,
+            pathfinder::Vec2(0, 0),
+            pathfinder::Vec2(4, 0),
+            outBufferSize,
+            outBuffers[i]
+            ));
+    }
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        threads[i]->join();
+    }
+    while (!threads.empty()) delete threads.back(), threads.pop_back();
+    while (!outBuffers.empty()) delete outBuffers.back(), outBuffers.pop_back();
+}
+
+TEST_F(PathfinderTester, MultiThreadsImposible) {
+    const unsigned int outBufferSize = 10;
+    createMap(MapTypeSmallImpossible, outBufferSize);
+    std::vector<int*> outBuffers;
+    std::vector<std::thread*> threads;
+    const int NUM_THREADS = 5;
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        outBuffers.push_back(new int[outBufferSize]);
+        threads.push_back(new std::thread(
+            &PathfinderTester::findPath,
+            this,
+            pathfinder::Vec2(0, m_mapHeight / 2),
+            pathfinder::Vec2(m_mapWidth - 1, m_mapHeight / 2),
+            outBufferSize,
+            outBuffers[i]
+            ));
+    }
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        threads[i]->join();
+    }
+    while (!threads.empty()) delete threads.back(), threads.pop_back();
+    while (!outBuffers.empty()) delete outBuffers.back(), outBuffers.pop_back();
 }

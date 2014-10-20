@@ -76,7 +76,8 @@ bool SearchSpace::insertNewNodes(const std::vector<Node>& insertNodes) {
     Node::NodeVecIterC nvBegin = m_approvedNotVisitedNodes.cbegin();
     while (it != nvBegin) {
         --it;
-        while (it->h + it->g >= currInNode->h + currInNode->g) {
+        unsigned int heuristic = it->h + it->g;
+        while (heuristic >= currInNode->h + currInNode->g) {
             insert(*currInNode, &(it + 1));
             ++currInNode;
             if (currInNode == inNodeEnd) {
@@ -125,10 +126,9 @@ void SearchSpace::getParentValue(int parentValue, const int nIndex, const int de
 }
 
 int SearchSpace::getPathToTarget(int* pOutBuffer) const {
-    const int NO_SOLUTION = -1;
-    if (m_activeNodeId == -1) return NO_SOLUTION;
+    if (m_activeNodeId == -1) return NoSolution;
     const Node& activeNode = m_foundNodes.find(m_activeNodeId)->second;
-    if (!activeNode.pos.equal(m_target)) return NO_SOLUTION;
+    if (!activeNode.pos.equal(m_target)) return NoSolution;
     getParentValue(m_activeNodeId, 0, activeNode.g, pOutBuffer);
     return activeNode.g + 1;
 }
@@ -152,7 +152,7 @@ unsigned int SearchSpace::getNumActiveNodes() const {
 
 
 const Node* const SearchSpace::getActiveNode() const {
-    return &(m_foundNodes.at(m_activeNodeId));
+    return &(m_foundNodes.find(m_activeNodeId))->second;
 }
 
 const Vec2& SearchSpace::getStart() const {

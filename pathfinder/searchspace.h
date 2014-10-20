@@ -9,8 +9,14 @@
 
 namespace pathfinder {
 
+
+
 class SearchSpace {
  public:
+     enum SolutionStatus {
+         NoSolution = -1,
+     };
+
      SearchSpace(const int nMapWidth, const int nMapHeight, const unsigned int nMaxSteps, const Vec2& start, const Vec2& target);
      SearchSpace(const SearchSpace& other);
 

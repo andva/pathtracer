@@ -4,6 +4,7 @@ set(PATHFINDER_SRC
 	node.cpp
 	vec2.cpp
     objectpool.cpp
+    resource.cpp
 	)
 
 set(PATHFINDER_HEAD 
@@ -12,6 +13,7 @@ set(PATHFINDER_HEAD
 	node.h
 	vec2.h
     objectpool.h
+    resource.h
 	)
 
 set(PLATFORM_COMPILE_FLAGS

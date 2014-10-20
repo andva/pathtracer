@@ -11,4 +11,8 @@ Vec2::Vec2() : x(0), y(0) { }
 
 Vec2::Vec2(const Vec2& other) : x(other.x), y(other.y) { }
 
+bool Vec2::equal(const Vec2& other) const {
+    return (x == other.x && y == other.y);
+}
+
 }  // namespace pathfinder

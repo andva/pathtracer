@@ -2,7 +2,7 @@
 #include <vector>
 #include "node.h"
 #include "searchspace.h"
-
+#include "searchspacepool.h"
 
 namespace pathfinder {
 
@@ -28,16 +28,11 @@ public:
     // Adds start and goal positions
     bool insertInitialNodes(const Vec2& nStartPos, const Vec2& nGoalPos, SearchSpace* pSearchSpace);
 
-    // Sets node with lowest heuristic as active node and removes it from
-    // list of nodes to search.
-    // Returns true if finished searching
-    bool update(SearchSpace* pSearchpace);
-
     // Returns -1 if no solution, otherwise fills pOutBuffer with values
     //int getSolution(int* pOutBuffer) const;
 
-    int findPath(const Vec2& start, const Vec2& target, int* pOutBuffer);
-    int findPath(SearchSpace* pSearchSpace, int* pOutBuffer);
+    int findPath(const Vec2& start, const Vec2& target, const int nMaxSteps, int* pOutBuffer);
+    //int findPath(SearchSpace* pSearchSpace, int* pOutBuffer);
 private:
     enum MapTile {
         MapTileGround = 0,
@@ -49,22 +44,21 @@ private:
     PathFinder(const PathFinder& ss);
     //
 
-    static ObjectPool* s_objectPool;
+    // DO NOT ACCESS THIS DIRECTLY, WILL BREAK EVERYTHING
+    // ONLY ACCESS USING getSearchSpacePool()
+    static SearchSpacePool* s_objectPool;
     static std::once_flag singleton_flag;
-
     static void initObjectPool() {
-        s_objectPool = new ObjectPool();
+        s_objectPool = new SearchSpacePool();
     }
-    
+    //
 
     const int m_mapWidth;
     const int m_mapHeight;
-    const unsigned int m_maxSteps;
+    //const unsigned int m_maxSteps;
     const unsigned char* const& m_map;
-    Vec2 m_start;
-    Vec2 m_goal;
 
-    ObjectPool* PathFinder::getInstance();
+    SearchSpacePool* PathFinder::getSearchSpacePool();
 
     inline int calculateIndex(const Vec2& nPos) const;
 
@@ -72,9 +66,7 @@ private:
     bool validateVec(const Vec2& nPos) const;
 
     // Add node to rNodeList if position is valid and is not already visited or added but not visited
-    bool insertIfValid(const Node* const pParent, const Vec2& nPos, SearchSpace* searchSpace, std::vector<Node>* pInOutNodeList);
+    bool insertIfValid(const int nParentId, const Vec2& nPos, SearchSpace* pSearchSpace, std::vector<Node>* pInOutNodeList);
 
-    //
-    //void getParentValue(const Node* n, const int i, const int depth, int* pOutBuffer) const;
 };
 } // namespace pathfinder

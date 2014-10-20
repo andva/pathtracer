@@ -1,18 +1,16 @@
-#include "objectpool.h"
+#include "searchspacepool.h"
 
 namespace pathfinder {
 
-ObjectPool::ObjectPool() {
+SearchSpacePool::SearchSpacePool() {
 
 }
 
-ObjectPool::~ObjectPool() {
+SearchSpacePool::~SearchSpacePool() {
     while (!m_resources.empty()) delete m_resources.front(), m_resources.pop_front();
 }
 
-
-
-void ObjectPool::addResource(const int nMapWidth, const int nMapHeight, const SearchSpace& nSearchSpace, const unsigned char* const pMap) {
+void SearchSpacePool::addResource(const int nMapWidth, const int nMapHeight, const SearchSpace& nSearchSpace, const unsigned char* const pMap) {
     const int MAX_RESOURCES = 2;
     std::lock_guard<std::mutex> lock(m_mutex);
     std::list<Resource*>::iterator it = findResource(nMapWidth, nMapHeight, nSearchSpace.getStart(), nSearchSpace.getTarget(), pMap);
@@ -27,27 +25,27 @@ void ObjectPool::addResource(const int nMapWidth, const int nMapHeight, const Se
     }
 }
 
-Resource* ObjectPool::getResource(const int nMapWidth, const int nMapHeight, const Vec2& nStart, const Vec2& nTarget, const unsigned char* const pMap) {
+SearchSpace SearchSpacePool::getResource(const int nMapWidth, const int nMapHeight, const int nMaxSteps, const Vec2& nStart, const Vec2& nTarget, const unsigned char* const pMap) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    if (m_resources.empty()) {
-        std::cout << "No resources!";
-    }
-    else {
+    if (!m_resources.empty()) {
         std::list<Resource*>::iterator it = findResource(nMapWidth, nMapHeight, nStart, nTarget, pMap);
         if (it != m_resources.end()) {
-            return *it;
+            (*it)->sSpace.updateForNewMaxSteps(nMaxSteps);
+            SearchSpace sp = (*it)->sSpace;
+            m_resources.remove(*it);
+            return sp;
         }
     }
-    return nullptr;
+    return SearchSpace(nMapWidth, nMapHeight, nMaxSteps, nStart, nTarget);
 }
 
-std::list<Resource*>::iterator ObjectPool::findResource(const int nMapWidth, const int nMapHeight, const Vec2& nStart, const Vec2& nTarget, const unsigned char* const pMap) {
+std::list<Resource*>::iterator SearchSpacePool::findResource(const int nMapWidth, const int nMapHeight, const Vec2& nStart, const Vec2& nTarget, const unsigned char* const pMap) {
     std::list<Resource*>::iterator it;
     for (it = m_resources.begin(); it != m_resources.end(); ++it) {
         const Vec2& ssStart = (*it)->sSpace.getStart();
         const Vec2& ssTarget = (*it)->sSpace.getTarget();
 
-        if (ssStart.x == nStart.x && ssStart.y == nStart.y && ssTarget.x == nTarget.x && ssTarget.y == nTarget.y && nMapWidth * nMapHeight == (*it)->mapSize) {
+        if (ssStart.equal(nStart) && ssTarget.equal(nTarget) && nMapWidth * nMapHeight == (*it)->mapSize) {
             bool sameMap = true;
             for (int i = 0; i < nMapWidth * nMapHeight; ++i) {
                 if (pMap[i] != (*it)->map[i]) {

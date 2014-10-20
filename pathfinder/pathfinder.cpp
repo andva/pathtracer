@@ -10,43 +10,48 @@ namespace pathfinder {
 SearchSpacePool* PathFinder::s_objectPool;
 std::once_flag PathFinder::singleton_flag;
 
-inline unsigned int distManhattan(const Vec2& sPosA, const Vec2& sPosB) {
-    int dx = abs(sPosA.x - sPosB.x);
-    int dy = abs(sPosA.y - sPosB.y);
+inline unsigned int PathFinder::distManhattan(const Vec2& posA, const Vec2& posB) {
+    int dx = abs(posA.x - posB.x);
+    int dy = abs(posA.y - posB.y);
     return dx + dy;
 }
 
 int FindPath(
-    const int nStartX, 
-    const int nStartY,
-    const int nTargetX,
-    const int nTargetY,
-    const unsigned char* pMap,
-    const int nMapWidth,
-    const int nMapHeight,
-    int* pOutBuffer,
-    const int nOutBufferSize) {
+    const int startX, 
+    const int startY,
+    const int targetX,
+    const int targetY,
+    const unsigned char* map,
+    const int mapWidth,
+    const int mapHeight,
+    int* outBuffer,
+    const int outBufferSize) {
 
-    PathFinder finder(nMapWidth, nMapHeight, nOutBufferSize, pMap);
+    PathFinder finder(mapWidth, mapHeight, outBufferSize, map);
 
-    return finder.findPath(Vec2(nStartX, nStartY), Vec2(nTargetX, nTargetY), nOutBufferSize, pOutBuffer);
+    return finder.findPath(Vec2(startX, startY), Vec2(targetX, targetY), outBufferSize, outBuffer);
 }
+
+PathFinder::PathFinder(const int mapWidth, const int mapHeight,
+    const unsigned int maxSteps, const unsigned char* const& map)
+    : m_mapWidth(mapWidth)
+    , m_mapHeight(mapHeight)
+    , m_map(map)
+{ }
 
 SearchSpacePool* PathFinder::getSearchSpacePool() {
     std::call_once(singleton_flag, initObjectPool);
     return s_objectPool;
 }
 
-PathFinder::PathFinder(const int nMapWidth, const int nMapHeight,
-    const unsigned int maxSteps, const unsigned char* const& pMap) :
-    m_mapWidth(nMapWidth),
-    m_mapHeight(nMapHeight),
-    m_map(pMap) {
+void PathFinder::initObjectPool()
+{
+    s_objectPool = new SearchSpacePool();
 }
 
-int PathFinder::findPath(const Vec2& start, const Vec2& target, const int nMaxSteps, int* pOutBuffer)
+int PathFinder::findPath(const Vec2& startPos, const Vec2& targetPos, const int maxSteps, int* outBuffer)
 {
-    SearchSpace searchSpace = getSearchSpacePool()->getResource(m_mapWidth, m_mapHeight, nMaxSteps, start, target, m_map);
+    SearchSpace searchSpace = getSearchSpacePool()->getResource(m_mapWidth, m_mapHeight, maxSteps, startPos, targetPos, m_map);
     if (searchSpace.getNumVisitedNodes() == 0) {
         if (!insertInitialNodes(searchSpace.getStart(), searchSpace.getTarget(), &searchSpace)) {
             return SearchSpace::NoSolution;
@@ -55,68 +60,68 @@ int PathFinder::findPath(const Vec2& start, const Vec2& target, const int nMaxSt
     while (!searchSpace.updateActiveNode()) {
         addNeighboringNodes(&searchSpace);
     }
-    int numSteps = searchSpace.getPathToTarget(pOutBuffer);
+    int numSteps = searchSpace.getPathToTarget(outBuffer);
     if (numSteps == SearchSpace::NoSolution) PathFinder::getSearchSpacePool()->addResource(m_mapWidth, m_mapHeight, searchSpace, m_map);
     return numSteps;
 }
 
-bool PathFinder::addNeighboringNodes(SearchSpace* pSearchSpace) {
+bool PathFinder::addNeighboringNodes(SearchSpace* searchSpace) {
     std::vector<Node> insertNodes;
-    const int activeNodeId = pSearchSpace->getActiveNodeId();
-    const Node* const activeNode = pSearchSpace->getActiveNode();
+    const int activeNodeId = searchSpace->getActiveNodeId();
+    const Node* const activeNode = searchSpace->getActiveNode();
     const Vec2& pos = activeNode->pos;
-    insertIfValid(activeNodeId, Vec2(pos.x + 1, pos.y), pSearchSpace, &insertNodes);
-    insertIfValid(activeNodeId, Vec2(pos.x - 1, pos.y), pSearchSpace, &insertNodes);
-    insertIfValid(activeNodeId, Vec2(pos.x, pos.y + 1), pSearchSpace, &insertNodes);
-    insertIfValid(activeNodeId, Vec2(pos.x, pos.y - 1), pSearchSpace, &insertNodes);
-    return pSearchSpace->insertNewNodes(insertNodes);
+    insertIfValid(activeNodeId, Vec2(pos.x + 1, pos.y), searchSpace, &insertNodes);
+    insertIfValid(activeNodeId, Vec2(pos.x - 1, pos.y), searchSpace, &insertNodes);
+    insertIfValid(activeNodeId, Vec2(pos.x, pos.y + 1), searchSpace, &insertNodes);
+    insertIfValid(activeNodeId, Vec2(pos.x, pos.y - 1), searchSpace, &insertNodes);
+    return searchSpace->insertNewNodes(insertNodes);
 }
 
-bool PathFinder::validateVec(const Vec2& nPos) const {
-    if (!(nPos.x >= 0 && nPos.x < m_mapWidth && nPos.y >= 0 && nPos.y < m_mapHeight))
+bool PathFinder::validateVec(const Vec2& pos) const {
+    if (!(pos.x >= 0 && pos.x < m_mapWidth && pos.y >= 0 && pos.y < m_mapHeight))
         return false;
-    int i = calculateIndex(nPos);
+    int i = calculateIndex(pos);
     unsigned int val = m_map[i];
     return val == MapTileGround;
 }
 
-int PathFinder::calculateIndex(const Vec2& nPos) const {
-    return m_mapWidth * nPos.y + nPos.x;
+int PathFinder::calculateIndex(const Vec2& pos) const {
+    return m_mapWidth * pos.y + pos.x;
 }
 
-bool PathFinder::insertIfValid(const int nParentId, const Vec2& nPos, SearchSpace* pSearchSpace, std::vector<Node>* pInOutNodeList) {
-    if (!validateVec(nPos)) {
+bool PathFinder::insertIfValid(const int parentId, const Vec2& pos, SearchSpace* searchSpace, std::vector<Node>* nodeVector) {
+    if (!validateVec(pos)) {
         return false;
     }
-    const Node* const parent = pSearchSpace->getActiveNode();
-    unsigned int h = distManhattan(nPos, pSearchSpace->getTarget());
+    const Node* const parent = searchSpace->getActiveNode();
+    unsigned int h = distManhattan(pos, searchSpace->getTarget());
     unsigned int g = (parent != nullptr) ? parent->g + 1 : 1;
 
-    if (pSearchSpace->isVisited(calculateIndex(nPos))) {
+    if (searchSpace->isVisited(calculateIndex(pos))) {
         return false;
     }
 
-    if (h + g >= pSearchSpace->getMaxSteps()) {
-        pSearchSpace->addOutOfRangeNode(Node(&nPos, h, g, pSearchSpace->getActiveNodeId()));
+    if (h + g >= searchSpace->getMaxSteps()) {
+        searchSpace->addOutOfRangeNode(Node(&pos, h, g, searchSpace->getActiveNodeId()));
         return false;
     }
 
-    for (auto it = pInOutNodeList->cbegin(); it != pInOutNodeList->cend(); ++it) {
+    for (auto it = nodeVector->cbegin(); it != nodeVector->cend(); ++it) {
         if (h + g <= it->h + it->g) {
-            pInOutNodeList->insert(it, Node(&nPos, h, g, pSearchSpace->getActiveNodeId()));
+            nodeVector->insert(it, Node(&pos, h, g, searchSpace->getActiveNodeId()));
             return true;
         }
     }
-    pInOutNodeList->push_back(Node(&nPos, h, g, pSearchSpace->getActiveNodeId()));
+    nodeVector->push_back(Node(&pos, h, g, searchSpace->getActiveNodeId()));
     return true;
 }
 
-bool PathFinder::insertInitialNodes(const Vec2& nStartPos, const Vec2& nGoalPos, SearchSpace* pSearchSpace) {
-    if (!validateVec(nStartPos) || !validateVec(nGoalPos)) {
+bool PathFinder::insertInitialNodes(const Vec2& startPos, const Vec2& targetPos, SearchSpace* searchSpace) {
+    if (!validateVec(startPos) || !validateVec(targetPos)) {
         return false;
     }
-    Node start(&nStartPos, 0, 0, -1);
-    pSearchSpace->insert(start, nullptr);
+    Node start(&startPos, 0, 0, -1);
+    searchSpace->insert(start, nullptr);
     
     return true;
 }

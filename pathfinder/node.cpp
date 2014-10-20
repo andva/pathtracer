@@ -1,22 +1,24 @@
 #include "node.h"
 namespace pathfinder {
 
-Node::Node(const Vec2* pPos, unsigned int nH, unsigned int nG, const int nParentId) :
-pos(pPos->x, pPos->y),
-h(nH),
-g(nG),
-parent(nParentId) {}
+Node::Node(const Vec2* pPos, unsigned int costToTarget, unsigned int costFromStart, const int parentId)
+    : pos(pPos->x, pPos->y)
+    , h(costToTarget)
+    , g(costFromStart)
+    , parent(parentId)
+{ }
 
-Node::Node() : parent(-1) {
-    h = 0;
-    g = 0;
-    pos = Vec2(0, 0);
-}
+Node::Node()
+    : parent(-1)
+    , h(0)
+    , g(0)
+    , pos()
+{ }
 
-Node::Node(const Node& rCopy) :
-pos(rCopy.pos.x, rCopy.pos.y),
-h(rCopy.h),
-g(rCopy.g),
-parent(rCopy.parent) {
-}
+Node::Node(const Node& rCopy)
+    : pos(rCopy.pos.x, rCopy.pos.y)
+    , h(rCopy.h)
+    , g(rCopy.g)
+    , parent(rCopy.parent)
+{ }
 }  //  namespace pathfinder

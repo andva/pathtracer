@@ -17,20 +17,20 @@ class SearchSpace {
          NoSolution = -1,
      };
 
-     SearchSpace(const int nMapWidth, const int nMapHeight, const unsigned int nMaxSteps, const Vec2& start, const Vec2& target);
+     SearchSpace(const int mapWidth, const int mapHeight, const unsigned int maxSteps, const Vec2& startPos, const Vec2& targetPos);
      SearchSpace(const SearchSpace& other);
 
      bool insertNewNodes(const std::vector<Node>& insertNodes);
      bool insert(const Node& node, const Node::NodeVecIterC* itr);
-     void addOutOfRangeNode(const Node& n);
-     bool isVisited(const int nMapIndex) const;
+     void addOutOfRangeNode(const Node& node);
+     bool isVisited(const int mapIndex) const;
      bool hasNoSolution() const;
      bool updateActiveNode();
 
-     void updateForNewMaxSteps(const unsigned int nMaxSteps);
+     void updateForNewMaxSteps(const unsigned int maxSteps);
 
      const int getActiveNodeId() const;
-     int getPathToTarget(int* pOutBuffer) const;
+     int getPathToTarget(int* outBuffer) const;
      unsigned int getNumVisitedNodes() const;
      unsigned int getNumActiveNodes() const;
      const Node* const getActiveNode() const;
@@ -38,7 +38,7 @@ class SearchSpace {
      const Vec2& getStart() const;
      const Vec2& getTarget() const;
      
-     void setMaxSteps(const int nMaxSteps);
+     void setMaxSteps(const int maxSteps);
  private:
     
     const int m_mapWidth;
@@ -54,7 +54,7 @@ class SearchSpace {
     std::vector<Node> m_outOfRangeNodes;
     unsigned int m_activeNodeId;
 
-    void getParentValue(int parentValue, const int nIndex, const int depth, int* pOutBuffer) const;
+    void getParentValue(int parentValue, const int currentDepth, const int totalDepth, int* outBuffer) const;
 };
 
 }  // namespace pathfinder

@@ -18,23 +18,24 @@ class PathfinderTester : public ::testing::Test  {
         MapTypeMiddleWall,
 	};
 
-    void findPath(const pathfinder::Vec2& start, const pathfinder::Vec2& target, const int nMaxSteps, int* pOutBuffer) {
+    void findPath(const pathfinder::Vec2& startPos, const pathfinder::Vec2& targetPos, const int maxSteps, int* outBuffer) {
 
-        int steps = m_pathFinder->findPath(start, target, nMaxSteps, pOutBuffer);
+        //int steps = m_pathFinder->findPath(vStart, vTarget, maxSteps, outBuffer);
+        int steps = pathfinder::FindPath(startPos.x, startPos.y, targetPos.x, targetPos.y, m_map, m_mapWidth, m_mapHeight, outBuffer, maxSteps);
         EXPECT_EQ(m_solveable, steps != pathfinder::SearchSpace::NoSolution);
-        testSolution(nMaxSteps, steps, start, target, pOutBuffer);
+        testSolution(maxSteps, steps, startPos, targetPos, outBuffer);
     };
-	void createMap(const MapType mapType, const unsigned int maxSteps) {
+	void createMap(const MapType eMapType, const unsigned int maxSteps) {
 		delete[] m_map;
 		delete[] m_outBuffer;
 		m_outBufferSize = maxSteps;
 		m_outBuffer = new int[m_outBufferSize];
-		if (mapType == MapTypeNone) {
+		if (eMapType == MapTypeNone) {
 			m_mapWidth = 0;
 			m_mapHeight = 0;
 			m_map = new unsigned char[0];
             m_solveable = false;
-		} else if (mapType == MapTypeSimple) {
+		} else if (eMapType == MapTypeSimple) {
 			m_mapWidth = 5;
 			m_mapHeight = 5;
 			unsigned int mapSize = m_mapWidth * m_mapHeight;
@@ -43,7 +44,7 @@ class PathfinderTester : public ::testing::Test  {
 				m_map[i] = 0;
 			}
             m_solveable = true;
-		} else if (mapType == MapTypeSmallImpossible) {
+		} else if (eMapType == MapTypeSmallImpossible) {
 			m_mapWidth = 5;
 			m_mapHeight = 5;
 			unsigned int mapSize = m_mapWidth * m_mapHeight;
@@ -53,7 +54,7 @@ class PathfinderTester : public ::testing::Test  {
 				m_map[x + y * m_mapWidth] = (x == 2) ? 1 : 0;
 			}
             m_solveable = false;
-		} else if (mapType == MapTypeLargeImpossible) {
+		} else if (eMapType == MapTypeLargeImpossible) {
 			m_mapWidth = 500;
 			m_mapHeight = 500;
 			unsigned int mapSize = m_mapWidth * m_mapHeight;
@@ -63,7 +64,7 @@ class PathfinderTester : public ::testing::Test  {
 				m_map[x + y * m_mapWidth] = (x == m_mapWidth - 3) ? 1 : 0;
 			}
             m_solveable = false;
-		} else if (mapType == MapTypeSmallDiagonal) {
+		} else if (eMapType == MapTypeSmallDiagonal) {
 			m_mapWidth = 10;
 			m_mapHeight = 10;
 			unsigned int mapSize = m_mapWidth * m_mapHeight;
@@ -73,7 +74,7 @@ class PathfinderTester : public ::testing::Test  {
 				m_map[x + y * m_mapWidth] = (x == y) ? 1 : 0;
 			}
             m_solveable = false;
-		} else if (mapType == MapTypeSingleLane) {
+		} else if (eMapType == MapTypeSingleLane) {
 			m_mapWidth = 10;
 			m_mapHeight = 1;
 			unsigned int mapSize = m_mapWidth * m_mapHeight;
@@ -82,7 +83,7 @@ class PathfinderTester : public ::testing::Test  {
 				m_map[i] = 0;
 			}
             m_solveable = true;
-        } else if (mapType == MapTypeMiddleWall) {
+        } else if (eMapType == MapTypeMiddleWall) {
             m_mapWidth = 3;
             m_mapHeight = 3;
             unsigned int mapSize = m_mapWidth * m_mapHeight;
@@ -98,10 +99,10 @@ class PathfinderTester : public ::testing::Test  {
         m_pathFinder.reset(new pathfinder::PathFinder(m_mapWidth, m_mapHeight, m_outBufferSize, m_map));
 	}
 
-    void testSolution(const int nMaxSteps, const int nSolutionSize, const pathfinder::Vec2& start, const pathfinder::Vec2& target, const int* const pBuffer) {
+    void testSolution(const int maxSteps, const int nSolutionSize, const pathfinder::Vec2& vStart, const pathfinder::Vec2& vTarget, const int* const pBuffer) {
         if (nSolutionSize > 0) {
-            EXPECT_EQ(start.x + start.y * m_mapWidth, pBuffer[0]);
-            EXPECT_EQ(target.x + target.y * m_mapWidth, pBuffer[nSolutionSize - 1]);
+            EXPECT_EQ(vStart.x + vStart.y * m_mapWidth, pBuffer[0]);
+            EXPECT_EQ(vTarget.x + vTarget.y * m_mapWidth, pBuffer[nSolutionSize - 1]);
         }
     }
 
@@ -127,11 +128,6 @@ class PathfinderTester : public ::testing::Test  {
 	int* m_outBuffer;
 	int m_outBufferSize;
 };
-
-TEST_F(PathfinderTester, ManhattanDistance) {
-	EXPECT_EQ(0, pathfinder::distManhattan(m_start, m_goal));
-	EXPECT_EQ(2, pathfinder::distManhattan(pathfinder::Vec2(), pathfinder::Vec2(1,1)));
-}
 
 TEST_F(PathfinderTester, InsertInitialNodes) {
     unsigned int maxSteps = 2;
@@ -231,7 +227,8 @@ TEST_F(PathfinderTester, NoSolutionLarge) {
     createMap(MapTypeLargeImpossible, outBufferSize);
 	pathfinder::Vec2 start(0, m_mapHeight / 2);
 	pathfinder::Vec2 target(m_mapWidth - 1, m_mapHeight / 2);
-    int numSteps = m_pathFinder->findPath(start, target, outBufferSize, m_outBuffer);
+    int numSteps = pathfinder::FindPath(start.x, start.y, target.x, target.y, m_map, m_mapWidth, m_mapHeight, m_outBuffer, m_outBufferSize);
+    //int numSteps = m_pathFinder->findPath(start, target, outBufferSize, m_outBuffer);
     EXPECT_EQ(pathfinder::SearchSpace::NoSolution, numSteps);
 }
 
@@ -286,7 +283,8 @@ TEST_F(PathfinderTester, MultiThreadsSolveable) {
     std::vector<std::thread*> threads;
     const int NUM_THREADS = 5;
     for (int i = 0; i < NUM_THREADS; ++i) {
-        outBuffers.push_back(new int[outBufferSize]);
+        int* buffer = new int[outBufferSize];
+        outBuffers.push_back(buffer);
         threads.push_back(new std::thread(
             &PathfinderTester::findPath,
             this,

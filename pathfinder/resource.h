@@ -6,11 +6,11 @@ namespace pathfinder {
 
 
 struct Resource {
-    SearchSpace sSpace;
+    SearchSpace searchSpace;
     const int mapSize;
     unsigned char* map;
 
-    Resource(const SearchSpace& nSearchSpace, const int nMapSize, const unsigned char* const pMap);
+    Resource(const SearchSpace& searchSpace, const int mapSize, const unsigned char* const map);
     ~Resource();
 private:
     Resource(const Resource& other);

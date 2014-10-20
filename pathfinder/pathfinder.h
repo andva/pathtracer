@@ -6,33 +6,29 @@
 
 namespace pathfinder {
 
-inline unsigned int distManhattan(const Vec2& sPosA, const Vec2& sPosB);
+int FindPath(const int startX, const int startY, const int targetX, 
+    const int targetY, const unsigned char* map, const int mapWidth, 
+    const int mapHeight, int* outBuffer, const int outBufferSize);
 
-int FindPath(const int nStartX, const int nStartY, const int nTargetX, 
-    const int nTargetY, const unsigned char* pMap, const int nMapWidth, 
-    const int nMapHeight, int* pOutBuffer, const int nOutBufferSize);
 class PathFinder {
 public:
     PathFinder(
-        const int nMapWidth,
-        const int nMapHeight,
+        const int mapWidth,
+        const int mapHeight,
         const unsigned int maxSteps,
-        const unsigned char* const& pMap);
+        const unsigned char* const& map);
 
     // Adds neighboring nodes if positions are valid and they
     // are not already visited.
     // Assumes that all nodes are validated.
     // Returns false if insertNodes is empty else true
-    bool addNeighboringNodes(SearchSpace* pSearchSpace);
+    bool addNeighboringNodes(SearchSpace* searchSpace);
 
     // Adds start and goal positions
-    bool insertInitialNodes(const Vec2& nStartPos, const Vec2& nGoalPos, SearchSpace* pSearchSpace);
+    bool insertInitialNodes(const Vec2& startPos, const Vec2& targetPos, SearchSpace* searchSpace);
 
-    // Returns -1 if no solution, otherwise fills pOutBuffer with values
-    //int getSolution(int* pOutBuffer) const;
-
-    int findPath(const Vec2& start, const Vec2& target, const int nMaxSteps, int* pOutBuffer);
-    //int findPath(SearchSpace* pSearchSpace, int* pOutBuffer);
+    int findPath(const Vec2& startPos, const Vec2& targetPos, const int maxSteps, int* outBuffer);
+    
 private:
     enum MapTile {
         MapTileGround = 0,
@@ -48,25 +44,23 @@ private:
     // ONLY ACCESS USING getSearchSpacePool()
     static SearchSpacePool* s_objectPool;
     static std::once_flag singleton_flag;
-    static void initObjectPool() {
-        s_objectPool = new SearchSpacePool();
-    }
+    static void initObjectPool();
     //
 
     const int m_mapWidth;
     const int m_mapHeight;
-    //const unsigned int m_maxSteps;
     const unsigned char* const& m_map;
 
     SearchSpacePool* PathFinder::getSearchSpacePool();
 
-    inline int calculateIndex(const Vec2& nPos) const;
+    inline int calculateIndex(const Vec2& pos) const;
 
     // Validates vector against map regions and already visited positions
-    bool validateVec(const Vec2& nPos) const;
+    bool validateVec(const Vec2& pos) const;
 
     // Add node to rNodeList if position is valid and is not already visited or added but not visited
-    bool insertIfValid(const int nParentId, const Vec2& nPos, SearchSpace* pSearchSpace, std::vector<Node>* pInOutNodeList);
+    bool insertIfValid(const int parentId, const Vec2& pos, SearchSpace* searchSpace, std::vector<Node>* nodeVector);
 
+    inline unsigned int distManhattan(const Vec2& posA, const Vec2& posB);
 };
 } // namespace pathfinder

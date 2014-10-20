@@ -9,18 +9,19 @@
 namespace pathfinder {
 
 SearchSpace::SearchSpace(
-    const int nMapWidth,
-    const int nMapHeight,
-    const unsigned int nMaxSteps,
-    const Vec2& start,
-    const Vec2& target) : 
-m_mapWidth(nMapWidth),
-m_mapHeight(nMapHeight),
-m_maxSteps(nMaxSteps),
-m_start(start),
-m_target(target),
-m_activeNodeId(-1) {
-    m_approvedNotVisitedNodes.reserve(nMapWidth + nMapHeight);
+        const int mapWidth,
+        const int mapHeight,
+        const unsigned int maxSteps,
+        const Vec2& startPos,
+        const Vec2& targetPos)
+    : m_mapWidth(mapWidth)
+    , m_mapHeight(mapHeight)
+    , m_maxSteps(maxSteps)
+    , m_start(startPos)
+    , m_target(targetPos)
+    , m_activeNodeId(-1)
+{
+    m_approvedNotVisitedNodes.reserve(mapWidth + mapHeight);
 }
 
 SearchSpace::SearchSpace(const SearchSpace& other) :
@@ -104,32 +105,32 @@ bool sortFunc(const Node& a, const Node& b) {
     return a.g + a.h > b.g + b.h;
 }
 
-void SearchSpace::updateForNewMaxSteps(const unsigned int nMaxSteps) {
-    m_maxSteps = nMaxSteps;
+void SearchSpace::updateForNewMaxSteps(const unsigned int maxSteps) {
+    m_maxSteps = maxSteps;
     if (m_outOfRangeNodes.empty()) return;
     std::sort(m_outOfRangeNodes.begin(), m_outOfRangeNodes.end(), sortFunc);
     std::vector<Node> validNodes;
-    while (m_outOfRangeNodes.back().g + m_outOfRangeNodes.back().h < nMaxSteps) {
+    while (m_outOfRangeNodes.back().g + m_outOfRangeNodes.back().h < maxSteps) {
         insert(m_outOfRangeNodes.back(), nullptr);
         m_outOfRangeNodes.pop_back();
         if (m_outOfRangeNodes.empty()) break;
     }
 }
 
-void SearchSpace::getParentValue(int parentValue, const int nIndex, const int depth, int* pOutBuffer) const {
-    if (parentValue == -1) {
+void SearchSpace::getParentValue(int nParentValue, const int nIndex, const int nDepth, int* outBuffer) const {
+    if (nParentValue == -1) {
         return;
     }
-    const Node& node = m_foundNodes.find(parentValue)->second;
-    getParentValue(node.parent, nIndex + 1, depth, pOutBuffer);
-    pOutBuffer[depth - nIndex] = node.pos.x + node.pos.y * m_mapWidth;
+    const Node& node = m_foundNodes.find(nParentValue)->second;
+    getParentValue(node.parent, nIndex + 1, nDepth, outBuffer);
+    outBuffer[nDepth - nIndex] = node.pos.x + node.pos.y * m_mapWidth;
 }
 
-int SearchSpace::getPathToTarget(int* pOutBuffer) const {
+int SearchSpace::getPathToTarget(int* outBuffer) const {
     if (m_activeNodeId == -1) return NoSolution;
     const Node& activeNode = m_foundNodes.find(m_activeNodeId)->second;
     if (!activeNode.pos.equal(m_target)) return NoSolution;
-    getParentValue(m_activeNodeId, 0, activeNode.g, pOutBuffer);
+    getParentValue(m_activeNodeId, 0, activeNode.g, outBuffer);
     return activeNode.g + 1;
 }
 
@@ -166,8 +167,8 @@ const unsigned int SearchSpace::getMaxSteps() const {
     return m_maxSteps;
 }
 
-void SearchSpace::setMaxSteps(const int nMaxSteps) {
-    m_maxSteps = nMaxSteps;
+void SearchSpace::setMaxSteps(const int maxSteps) {
+    m_maxSteps = maxSteps;
 }
 
 }  // namespace pathfinder

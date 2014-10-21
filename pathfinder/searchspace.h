@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <memory>
 
 #include "node.h"
 #include "vec2.h"

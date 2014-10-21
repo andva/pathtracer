@@ -17,15 +17,15 @@ inline unsigned int PathFinder::distManhattan(const Vec2& posA, const Vec2& posB
 }
 
 int FindPath(
-    const int startX, 
-    const int startY,
-    const int targetX,
-    const int targetY,
-    const unsigned char* map,
-    const int mapWidth,
-    const int mapHeight,
-    int* outBuffer,
-    const int outBufferSize) {
+        const int startX,
+        const int startY,
+        const int targetX,
+        const int targetY,
+        const unsigned char* map,
+        const int mapWidth,
+        const int mapHeight,
+        int* outBuffer,
+        const int outBufferSize) {
 
     PathFinder finder(mapWidth, mapHeight, outBufferSize, map);
 
@@ -33,7 +33,7 @@ int FindPath(
 }
 
 PathFinder::PathFinder(const int mapWidth, const int mapHeight,
-    const unsigned int maxSteps, const unsigned char* const& map)
+        const unsigned int maxSteps, const unsigned char* const& map)
     : m_mapWidth(mapWidth)
     , m_mapHeight(mapHeight)
     , m_map(map)
@@ -61,7 +61,7 @@ int PathFinder::findPath(const Vec2& startPos, const Vec2& targetPos, const int 
         addNeighboringNodes(&searchSpace);
     }
     int numSteps = searchSpace.getPathToTarget(outBuffer);
-    if (numSteps == SearchSpace::NoSolution) PathFinder::getSearchSpacePool()->addResource(m_mapWidth, m_mapHeight, searchSpace, m_map);
+    if (numSteps == SearchSpace::NoSolution) getSearchSpacePool()->addResource(m_mapWidth, m_mapHeight, searchSpace, m_map);
     return numSteps;
 }
 

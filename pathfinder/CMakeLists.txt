@@ -3,7 +3,7 @@ set(PATHFINDER_SRC
 	searchspace.cpp
 	node.cpp
 	vec2.cpp
-    objectpool.cpp
+    searchspacepool.cpp
     resource.cpp
 	)
 
@@ -12,7 +12,7 @@ set(PATHFINDER_HEAD
 	searchspace.h
 	node.h
 	vec2.h
-    objectpool.h
+    searchspacepool.h
     resource.h
 	)
 

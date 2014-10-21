@@ -40,7 +40,7 @@ SearchSpace::SearchSpace(const SearchSpace& other)
 
 }
 
-bool SearchSpace::insert(const Node& node, const Node::NodeVecIterC* itr) {
+bool SearchSpace::insertAtPosition(const Node& node, const Node::NodeVecIterC* itr) {
     int mapIndex = node.pos.x + node.pos.y * m_mapWidth;
     (*m_foundNodes)[mapIndex] = node;
     if (itr == nullptr)  {
@@ -68,7 +68,7 @@ bool SearchSpace::insertNewNodes(const std::vector<Node>& insertNodes) {
         auto itBeg = insertNodes.cbegin();
         while (it != itBeg) {
             --it;
-            insert(*it, nullptr);
+            insertAtPosition(*it, nullptr);
         }
         return true;
     }
@@ -81,7 +81,7 @@ bool SearchSpace::insertNewNodes(const std::vector<Node>& insertNodes) {
         --it;
         unsigned int heuristic = it->h + it->g;
         while (heuristic >= currInNode->h + currInNode->g) {
-            insert(*currInNode, &(it + 1));
+            insertAtPosition(*currInNode, &(it + 1));
             ++currInNode;
             if (currInNode == inNodeEnd) {
                 return true;
@@ -113,7 +113,7 @@ void SearchSpace::updateForNewMaxSteps(const unsigned int maxSteps) {
     std::sort(m_outOfRangeNodes.begin(), m_outOfRangeNodes.end(), sortFunc);
     std::vector<Node> validNodes;
     while (m_outOfRangeNodes.back().g + m_outOfRangeNodes.back().h < maxSteps) {
-        insert(m_outOfRangeNodes.back(), nullptr);
+        insertAtPosition(m_outOfRangeNodes.back(), nullptr);
         m_outOfRangeNodes.pop_back();
         if (m_outOfRangeNodes.empty()) break;
     }

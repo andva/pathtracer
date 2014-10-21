@@ -13,7 +13,6 @@ namespace pathfinder {
 
 class SearchSpacePool {
 public:
-    
     void addResource(const int mapWidth, const int mapHeight, const SearchSpace& nSearchSpace, const unsigned char* const map);
 
     // Returns copy to make sure that other thread does not delete a reference.

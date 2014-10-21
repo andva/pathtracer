@@ -58,10 +58,10 @@ bool PathFinder::addNeighboringNodes(SearchSpace* searchSpace) {
     const int activeNodeId = searchSpace->getActiveNodeId();
     const Node* const activeNode = searchSpace->getActiveNode();
     const Vec2& pos = activeNode->pos;
-    insertIfValid(activeNodeId, Vec2(pos.x + 1, pos.y), searchSpace, &insertNodes);
-    insertIfValid(activeNodeId, Vec2(pos.x - 1, pos.y), searchSpace, &insertNodes);
-    insertIfValid(activeNodeId, Vec2(pos.x, pos.y + 1), searchSpace, &insertNodes);
-    insertIfValid(activeNodeId, Vec2(pos.x, pos.y - 1), searchSpace, &insertNodes);
+    insertNodeIfValid(activeNodeId, Vec2(pos.x + 1, pos.y), searchSpace, &insertNodes);
+    insertNodeIfValid(activeNodeId, Vec2(pos.x - 1, pos.y), searchSpace, &insertNodes);
+    insertNodeIfValid(activeNodeId, Vec2(pos.x, pos.y + 1), searchSpace, &insertNodes);
+    insertNodeIfValid(activeNodeId, Vec2(pos.x, pos.y - 1), searchSpace, &insertNodes);
     return searchSpace->insertNewNodes(insertNodes);
 }
 
@@ -77,7 +77,7 @@ int PathFinder::calculateIndex(const Vec2& pos) const {
     return m_mapWidth * pos.y + pos.x;
 }
 
-bool PathFinder::insertIfValid(const int parentId, const Vec2& pos, SearchSpace* searchSpace, std::vector<Node>* nodeVector) {
+bool PathFinder::insertNodeIfValid(const int parentId, const Vec2& pos, SearchSpace* searchSpace, std::vector<Node>* nodeVector) {
     if (!validateVec(pos)) {
         return false;
     }
@@ -109,7 +109,7 @@ bool PathFinder::insertInitialNodes(const Vec2& startPos, const Vec2& targetPos,
         return false;
     }
     Node start(&startPos, 0, 0, -1);
-    searchSpace->insert(start, nullptr);
+    searchSpace->insertAtPosition(start, nullptr);
     
     return true;
 }

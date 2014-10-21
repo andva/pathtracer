@@ -22,7 +22,7 @@ class SearchSpace {
      SearchSpace(const SearchSpace& other);
 
      bool insertNewNodes(const std::vector<Node>& insertNodes);
-     bool insert(const Node& node, const Node::NodeVecIterC* itr);
+     bool insertAtPosition(const Node& node, const Node::NodeVecIterC* itr);
      void addOutOfRangeNode(const Node& node);
      bool isVisited(const int mapIndex) const;
      bool hasNoSolution() const;
@@ -51,7 +51,8 @@ class SearchSpace {
     const Vec2 m_target;
 
     std::vector<Node> m_approvedNotVisitedNodes;
-    // Allocate on stack to share the  memory when 
+
+    // Allocate on stack to avoid copying this when storing
     std::shared_ptr<std::map<int, Node>> m_foundNodes;
     
     std::vector<Node> m_outOfRangeNodes;

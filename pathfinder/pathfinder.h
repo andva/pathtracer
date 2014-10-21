@@ -24,10 +24,8 @@ public:
     // Returns false if insertNodes is empty else true
     bool addNeighboringNodes(SearchSpace* searchSpace);
 
-    // Adds start and goal positions
     bool insertInitialNodes(const Vec2& startPos, const Vec2& targetPos, SearchSpace* searchSpace);
 
-    // 
     int findPath(const Vec2& startPos, const Vec2& targetPos, const int maxSteps, int* outBuffer);
     
 private:
@@ -36,12 +34,10 @@ private:
         MapTileWall = 1,
     };
 
-    // Disallow default and copy constructor
     PathFinder() = delete;
     PathFinder(const PathFinder& ss) = delete;
     PathFinder& PathFinder::operator= (const PathFinder&) = delete;
-    //
-
+    
     const int m_mapWidth;
     const int m_mapHeight;
     const unsigned char* const& m_map;
@@ -51,8 +47,7 @@ private:
     // Validates vector against map regions and already visited positions
     bool validateVec(const Vec2& pos) const;
 
-    // Add node to list of nodes to visit if position is valid and is not already visited or added but not visited
-    bool insertIfValid(const int parentId, const Vec2& pos, SearchSpace* searchSpace, std::vector<Node>* nodeVector);
+    bool insertNodeIfValid(const int parentId, const Vec2& pos, SearchSpace* searchSpace, std::vector<Node>* nodeVector);
 
     inline unsigned int distManhattan(const Vec2& posA, const Vec2& posB);
 };

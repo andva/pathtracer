@@ -19,28 +19,30 @@ SearchSpace::SearchSpace(
     , m_maxSteps(maxSteps)
     , m_start(startPos)
     , m_target(targetPos)
+    , m_foundNodes(new std::map<int, Node>())
     , m_activeNodeId(-1)
 {
+
     m_approvedNotVisitedNodes.reserve(mapWidth + mapHeight);
 }
 
-SearchSpace::SearchSpace(const SearchSpace& other) :
-m_mapWidth(other.m_mapWidth),
-m_mapHeight(other.m_mapHeight),
-m_maxSteps(other.m_maxSteps),
-m_start(other.m_start),
-m_target(other.m_target),
-m_activeNodeId(other.m_activeNodeId),
-m_approvedNotVisitedNodes(other.m_approvedNotVisitedNodes),
-m_foundNodes(other.m_foundNodes),
-m_outOfRangeNodes(other.m_outOfRangeNodes)
+SearchSpace::SearchSpace(const SearchSpace& other)
+    : m_mapWidth(other.m_mapWidth)
+    , m_mapHeight(other.m_mapHeight)
+    , m_maxSteps(other.m_maxSteps)
+    , m_start(other.m_start)
+    , m_target(other.m_target)
+    , m_activeNodeId(other.m_activeNodeId)
+    , m_approvedNotVisitedNodes(other.m_approvedNotVisitedNodes)
+    , m_foundNodes(other.m_foundNodes)
+    , m_outOfRangeNodes(other.m_outOfRangeNodes)
 {
 
 }
 
 bool SearchSpace::insert(const Node& node, const Node::NodeVecIterC* itr) {
     int mapIndex = node.pos.x + node.pos.y * m_mapWidth;
-    m_foundNodes[mapIndex] = node;
+    (*m_foundNodes)[mapIndex] = node;
     if (itr == nullptr)  {
         m_approvedNotVisitedNodes.push_back(node);
     } else {
@@ -52,11 +54,11 @@ bool SearchSpace::insert(const Node& node, const Node::NodeVecIterC* itr) {
 void SearchSpace::addOutOfRangeNode(const Node& node) {
     m_outOfRangeNodes.push_back(node);
     int mapIndex = node.pos.x + node.pos.y * m_mapWidth;
-    m_foundNodes[mapIndex] = node;
+    (*m_foundNodes)[mapIndex] = node;
 }
 
 bool SearchSpace::isVisited(const int nMapIndex) const {
-    return m_foundNodes.find(nMapIndex) != m_foundNodes.end();
+    return m_foundNodes->find(nMapIndex) != m_foundNodes->end();
 }
 
 bool SearchSpace::insertNewNodes(const std::vector<Node>& insertNodes) {
@@ -97,7 +99,7 @@ bool SearchSpace::updateActiveNode() {
     int i = n.pos.x + n.pos.y * m_mapWidth;
     m_approvedNotVisitedNodes.pop_back();
     m_activeNodeId = i;
-    Vec2& activeNodePos = m_foundNodes[i].pos;
+    Vec2& activeNodePos = (*m_foundNodes)[i].pos;
     return activeNodePos.x == getTarget().x && activeNodePos.y == getTarget().y;
 }
 
@@ -121,14 +123,14 @@ void SearchSpace::getParentValue(int nParentValue, const int nIndex, const int n
     if (nParentValue == -1) {
         return;
     }
-    const Node& node = m_foundNodes.find(nParentValue)->second;
+    const Node& node = m_foundNodes->find(nParentValue)->second;
     getParentValue(node.parent, nIndex + 1, nDepth, outBuffer);
     outBuffer[nDepth - nIndex] = node.pos.x + node.pos.y * m_mapWidth;
 }
 
 int SearchSpace::getPathToTarget(int* outBuffer) const {
     if (m_activeNodeId == -1) return NoSolution;
-    const Node& activeNode = m_foundNodes.find(m_activeNodeId)->second;
+    const Node& activeNode = m_foundNodes->find(m_activeNodeId)->second;
     if (!activeNode.pos.equal(m_target)) return NoSolution;
     getParentValue(m_activeNodeId, 0, activeNode.g, outBuffer);
     return activeNode.g + 1;
@@ -144,7 +146,7 @@ const int SearchSpace::getActiveNodeId() const
 }
 
 unsigned int SearchSpace::getNumVisitedNodes() const {
-    return m_foundNodes.size();
+    return m_foundNodes->size();
 }
 
 unsigned int SearchSpace::getNumActiveNodes() const {
@@ -153,7 +155,7 @@ unsigned int SearchSpace::getNumActiveNodes() const {
 
 
 const Node* const SearchSpace::getActiveNode() const {
-    return &(m_foundNodes.find(m_activeNodeId))->second;
+    return &(m_foundNodes->find(m_activeNodeId))->second;
 }
 
 const Vec2& SearchSpace::getStart() const {

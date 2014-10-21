@@ -10,4 +10,5 @@ struct Vec2 {
     Vec2(const Vec2&);
     bool equal(const Vec2& other) const;
 };
+
 }  // namespace pathfinder

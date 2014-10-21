@@ -13,6 +13,7 @@ struct Resource {
     Resource(const SearchSpace& searchSpace, const int mapSize, const unsigned char* const map);
     ~Resource();
 private:
-    Resource(const Resource& other);
+    Resource(const Resource& other) = delete;
+    Resource& Resource::operator= (const Resource&) = delete;
 };
 }  //  namespace pathfinder

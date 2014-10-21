@@ -41,7 +41,8 @@ class SearchSpace {
      
      void setMaxSteps(const int maxSteps);
  private:
-    
+     SearchSpace& SearchSpace::operator= (const SearchSpace&) = delete;
+
     const int m_mapWidth;
     const int m_mapHeight;
     unsigned int m_maxSteps;
@@ -50,7 +51,8 @@ class SearchSpace {
     const Vec2 m_target;
 
     std::vector<Node> m_approvedNotVisitedNodes;
-    std::map<int, Node> m_foundNodes;
+    // Allocate on stack to share the  memory when 
+    std::shared_ptr<std::map<int, Node>> m_foundNodes;
     
     std::vector<Node> m_outOfRangeNodes;
     unsigned int m_activeNodeId;

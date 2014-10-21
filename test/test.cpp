@@ -213,6 +213,15 @@ TEST_F(PathfinderTester, AddNeighboringNodes) {
     EXPECT_TRUE(sSpace.getNumVisitedNodes() > 1);
 }
 
+TEST_F(PathfinderTester, SimpleOneStep) {
+    const unsigned int outBufferSize = 10;
+    createMap(MapTypeSimple, outBufferSize);
+    m_target = pathfinder::Vec2(m_start.x + 1, m_start.y);
+    int numSteps = m_pathFinder->findPath(m_start, m_target, outBufferSize, m_outBuffer);
+    testSolution(outBufferSize, numSteps, m_start, m_target, m_outBuffer);
+    EXPECT_NE(pathfinder::SearchSpace::NoSolution, numSteps);
+}
+
 TEST_F(PathfinderTester, NoSolutionSmall) {
     const unsigned int outBufferSize = 10;
     createMap(MapTypeSmallImpossible, outBufferSize);
@@ -252,7 +261,6 @@ TEST_F(PathfinderTester, SingleLaneMap) {
 
 TEST_F(PathfinderTester, LoopAllowedLength) {
     createMap(MapTypeSingleLane, 0);
-
 	for (int i = 0; i < m_mapWidth; ++i) {
         createMap(MapTypeSingleLane, i);
         int numSteps = m_pathFinder->findPath(m_start, m_target, static_cast<unsigned int>(i), m_outBuffer);
@@ -264,7 +272,6 @@ TEST_F(PathfinderTester, LoopAllowedLength) {
 
 TEST_F(PathfinderTester, CacheUsed) {
     createMap(MapTypeMiddleWall, 0);
-    
     for (int i = m_mapWidth + 1; i < m_mapWidth * m_mapHeight; ++i) {
         createMap(MapTypeMiddleWall, i);
         int numSteps = m_pathFinder->findPath(m_start, m_target, static_cast<unsigned int>(i), m_outBuffer);

@@ -27,6 +27,7 @@ public:
     // Adds start and goal positions
     bool insertInitialNodes(const Vec2& startPos, const Vec2& targetPos, SearchSpace* searchSpace);
 
+    // 
     int findPath(const Vec2& startPos, const Vec2& targetPos, const int maxSteps, int* outBuffer);
     
 private:
@@ -36,29 +37,21 @@ private:
     };
 
     // Disallow default and copy constructor
-    PathFinder();
-    PathFinder(const PathFinder& ss);
-    //
-
-    // DO NOT ACCESS THIS DIRECTLY, WILL BREAK EVERYTHING
-    // ONLY ACCESS USING getSearchSpacePool()
-    static SearchSpacePool* s_objectPool;
-    static std::once_flag singleton_flag;
-    static void initObjectPool();
+    PathFinder() = delete;
+    PathFinder(const PathFinder& ss) = delete;
+    PathFinder& PathFinder::operator= (const PathFinder&) = delete;
     //
 
     const int m_mapWidth;
     const int m_mapHeight;
     const unsigned char* const& m_map;
 
-    SearchSpacePool* PathFinder::getSearchSpacePool();
-
     inline int calculateIndex(const Vec2& pos) const;
 
     // Validates vector against map regions and already visited positions
     bool validateVec(const Vec2& pos) const;
 
-    // Add node to rNodeList if position is valid and is not already visited or added but not visited
+    // Add node to list of nodes to visit if position is valid and is not already visited or added but not visited
     bool insertIfValid(const int parentId, const Vec2& pos, SearchSpace* searchSpace, std::vector<Node>* nodeVector);
 
     inline unsigned int distManhattan(const Vec2& posA, const Vec2& posB);

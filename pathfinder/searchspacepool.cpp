@@ -2,12 +2,19 @@
 
 namespace pathfinder {
 
+std::once_flag SearchSpacePool::s_singleton_created_flag;
+
 SearchSpacePool::SearchSpacePool() {
 
 }
 
 SearchSpacePool::~SearchSpacePool() {
     while (!m_resources.empty()) delete m_resources.front(), m_resources.pop_front();
+}
+
+SearchSpacePool& SearchSpacePool::singleton() {
+    static SearchSpacePool instance;
+    return instance;
 }
 
 void SearchSpacePool::addResource(const int mapWidth, const int mapHeight, const SearchSpace& nSearchSpace, const unsigned char* const map) {

@@ -7,8 +7,6 @@
 #include "node.h"
 
 namespace pathfinder {
-SearchSpacePool* PathFinder::s_objectPool;
-std::once_flag PathFinder::singleton_flag;
 
 inline unsigned int PathFinder::distManhattan(const Vec2& posA, const Vec2& posB) {
     int dx = abs(posA.x - posB.x);
@@ -39,19 +37,9 @@ PathFinder::PathFinder(const int mapWidth, const int mapHeight,
     , m_map(map)
 { }
 
-SearchSpacePool* PathFinder::getSearchSpacePool() {
-    std::call_once(singleton_flag, initObjectPool);
-    return s_objectPool;
-}
-
-void PathFinder::initObjectPool()
-{
-    s_objectPool = new SearchSpacePool();
-}
-
 int PathFinder::findPath(const Vec2& startPos, const Vec2& targetPos, const int maxSteps, int* outBuffer)
 {
-    SearchSpace searchSpace = getSearchSpacePool()->getResource(m_mapWidth, m_mapHeight, maxSteps, startPos, targetPos, m_map);
+    SearchSpace searchSpace = SearchSpacePool::singleton().getResource(m_mapWidth, m_mapHeight, maxSteps, startPos, targetPos, m_map);
     if (searchSpace.getNumVisitedNodes() == 0) {
         if (!insertInitialNodes(searchSpace.getStart(), searchSpace.getTarget(), &searchSpace)) {
             return SearchSpace::NoSolution;
@@ -61,7 +49,7 @@ int PathFinder::findPath(const Vec2& startPos, const Vec2& targetPos, const int 
         addNeighboringNodes(&searchSpace);
     }
     int numSteps = searchSpace.getPathToTarget(outBuffer);
-    if (numSteps == SearchSpace::NoSolution) getSearchSpacePool()->addResource(m_mapWidth, m_mapHeight, searchSpace, m_map);
+    if (numSteps == SearchSpace::NoSolution) SearchSpacePool::singleton().addResource(m_mapWidth, m_mapHeight, searchSpace, m_map);
     return numSteps;
 }
 

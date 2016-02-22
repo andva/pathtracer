@@ -1,4 +1,1 @@
-ParadoxalPath
-=============
-
-Paradox Interactive programming task
+path tracing
